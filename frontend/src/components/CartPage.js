@@ -35,7 +35,7 @@ const CartPage = () => {
                             title={<a href={`/product/${item._id}`}>{item.name}</a>}
                             description={`Quantity: ${item.quantity}`}
                         />
-                        <div>${(item.price * item.quantity).toFixed(2)}</div>
+                        <div>₹{(item.price * item.quantity).toFixed(2)}</div>
                     </List.Item>
                 )}
             />

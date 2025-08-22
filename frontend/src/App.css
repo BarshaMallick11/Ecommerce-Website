@@ -5,3 +5,20 @@
 .product-list {
   padding: 24px;
 }
+/* By default, hide the mobile-only hamburger icon */
+.mobile-nav-icon {
+  display: none;
+}
+
+/* This is the media query for mobile devices (screens smaller than 768px) */
+@media (max-width: 767px) {
+  /* Hide the desktop navigation links */
+  .desktop-nav-links {
+    display: none;
+  }
+
+  /* Show the mobile-only hamburger icon */
+  .mobile-nav-icon {
+    display: inline-block; /* Use inline-block to make it visible */
+  }
+}

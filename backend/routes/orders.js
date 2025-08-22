@@ -1,28 +1,47 @@
 // backend/routes/orders.js
 const router = require('express').Router();
 const Order = require('../models/order.model');
-const jwt = require('jsonwebtoken');
+const { protect, admin } = require('../middleware/authMiddleware');
 
-// Middleware to verify token and get user
-const auth = (req, res, next) => {
-    const token = req.header('x-auth-token');
-    if (!token) return res.status(401).send('Access denied. No token provided.');
-
+// @desc   Get all orders
+// @route  GET /api/orders/all
+// @access Private/Admin
+router.get('/all', protect, admin, async (req, res) => {
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
-        next();
-    } catch (ex) {
-        res.status(400).send('Invalid token.');
-    }
-};
-
-router.get('/', auth, async (req, res) => {
-    try {
-        const orders = await Order.find({ user: req.user.id }).sort({ createdAt: -1 });
+        const orders = await Order.find({}).populate('user', 'id username').sort({ createdAt: -1 });
         res.json(orders);
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching orders.' });
+        res.status(500).json({ message: 'Error fetching all orders.' });
+    }
+});
+
+// @desc   Update order to delivered
+// @route  PUT /api/orders/:id/deliver
+// @access Private/Admin
+router.put('/:id/deliver', protect, admin, async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+        if (order) {
+            order.isDelivered = true;
+            const updatedOrder = await order.save();
+            res.json(updatedOrder);
+        } else {
+            res.status(404).json({ message: 'Order not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating order.' });
+    }
+});
+
+// @desc   Get logged in user orders
+// @route  GET /api/orders
+// @access Private
+router.get('/', protect, async (req, res) => {
+    try {
+        const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching user orders.' });
     }
 });
 
