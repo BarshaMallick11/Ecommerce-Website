@@ -5,6 +5,10 @@
 .product-list {
   padding: 24px;
 }
+
+
+
+
 /* By default, hide the mobile-only hamburger icon */
 .mobile-nav-icon {
   display: none;

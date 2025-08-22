@@ -63,5 +63,6 @@ const Product = ({ product }) => {
     );
 };
 
+
 export default Product;
-// export default Product;
+
