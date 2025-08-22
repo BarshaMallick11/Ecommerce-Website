@@ -1,41 +1,66 @@
 // frontend/src/components/Product.js
+
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Card, Button, Typography } from 'antd';
-import { ShoppingCartOutlined } from '@ant-design/icons';
-import { useCart } from '../context/CartContext'; // Import useCart
+import { Card, Button, Typography, message } from 'antd';
+import { Link, useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 const { Meta } = Card;
 const { Text } = Typography;
 
 const Product = ({ product }) => {
-  const { addToCart } = useCart(); // Get addToCart function
+    const { addToCart } = useCart();
+    const { user } = useAuth();
+    const navigate = useNavigate();
 
-  const handleAddToCart = (e) => {
-    e.preventDefault(); // Prevent navigation when clicking the button
-    e.stopPropagation(); // Stop the click from bubbling up to the Link
-    addToCart(product);
-  };
+    const handleAddToCart = () => {
+        if (user) {
+            addToCart(product);
+            message.success(`${product.name} added to cart`);
+        } else {
+            message.warning('Please log in to add items to your cart.');
+            navigate('/login');
+        }
+    };
 
-  return (
-    <Link to={`/product/${product._id}`}>
-      <Card
-        hoverable
-        style={{ width: 240, margin: '16px' }}
-        cover={<img alt={product.name} src={product.image || '[https://placehold.co/240x240/EEE/31343C?text=No+Image](https://placehold.co/240x240/EEE/31343C?text=No+Image)'} />}
-        actions={[
-          <Button type="primary" icon={<ShoppingCartOutlined />} onClick={handleAddToCart}>
-            Add to Cart
-          </Button>
-        ]}
-      >
-        <Meta
-          title={product.name}
-          description={<Text strong>${product.price.toFixed(2)}</Text>}
-        />
-      </Card>
-    </Link>
-  );
+    return (
+        <Card
+            hoverable
+            style={{ width: '100%' }}
+            cover={
+                <div
+                    style={{
+                        height: 160, // CHANGED FROM 240 to 160
+                        overflow: 'hidden',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                >
+                    <Link to={`/product/${product._id}`} style={{ width: '100%', height: '100%' }}>
+                        <img
+                            alt={product.name}
+                            src={product.image}
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                            }}
+                        />
+                    </Link>
+                </div>
+            }
+        >
+            <Meta
+                title={<Link to={`/product/${product._id}`}>{product.name}</Link>}
+                description={<Text strong>₹{product.price.toFixed(2)}</Text>}
+            />
+            <Button type="primary" style={{ marginTop: '10px', width: '100%' }} onClick={handleAddToCart}>
+                Add to Cart
+            </Button>
+        </Card>
+    );
 };
 
 export default Product;
