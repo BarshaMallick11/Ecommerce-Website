@@ -1,0 +1,50 @@
+// frontend/src/components/LoginPage.js
+import React from 'react';
+import { Form, Input, Button, Card, Typography, message, Row, Col } from 'antd';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate, Link } from 'react-router-dom';
+
+const { Title } = Typography;
+
+const LoginPage = () => {
+    const { login } = useAuth();
+    const navigate = useNavigate();
+
+    const onFinish = async (values) => {
+        try {
+            const res = await axios.post('http://localhost:5000/api/auth/login', values);
+            login(res.data.token, res.data.user);
+            message.success('Login successful!');
+            navigate('/');
+        } catch (err) {
+            message.error(err.response.data.msg || 'Login failed!');
+        }
+    };
+
+    return (
+        <Row justify="center" align="middle" style={{ minHeight: '70vh' }}>
+            <Col>
+                <Card title={<Title level={3}>Login</Title>} style={{ width: 400 }}>
+                    <Form name="login" onFinish={onFinish}>
+                        <Form.Item name="email" rules={[{ required: true, message: 'Please input your Email!' }]}>
+                            <Input prefix={<UserOutlined />} placeholder="Email" />
+                        </Form.Item>
+                        <Form.Item name="password" rules={[{ required: true, message: 'Please input your Password!' }]}>
+                            <Input.Password prefix={<LockOutlined />} placeholder="Password" />
+                        </Form.Item>
+                        <Form.Item>
+                            <Button type="primary" htmlType="submit" style={{ width: '100%' }}>
+                                Log in
+                            </Button>
+                            Or <Link to="/register">register now!</Link>
+                        </Form.Item>
+                    </Form>
+                </Card>
+            </Col>
+        </Row>
+    );
+};
+
+export default LoginPage;

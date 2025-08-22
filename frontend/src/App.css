@@ -1,0 +1,7 @@
+/* frontend/src/App.css */
+@import 'antd/dist/reset.css';
+
+/* Your other styles can go here */
+.product-list {
+  padding: 24px;
+}
