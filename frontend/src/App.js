@@ -18,6 +18,7 @@ import AdminRoute from './components/AdminRoute';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AdminOrderList from './components/AdminOrderList';
+import AdminUserList from './components/AdminUserList';
 
 
 
@@ -128,6 +129,7 @@ function App() {
                     <Route path="/admin" element={<AdminRoute />}>
                         <Route path="" element={<AdminDashboard />} />
                         <Route path="orders" element={<AdminOrderList />} />
+                        <Route path="users" element={<AdminUserList />} />
                     </Route>
                   </Routes>
                 </div>

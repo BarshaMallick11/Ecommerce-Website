@@ -24,11 +24,13 @@ const productsRouter = require('./routes/products');
 const authRouter = require('./routes/auth');
 const paymentRouter = require('./routes/payment');
 const ordersRouter = require('./routes/orders');
+const usersRouter = require('./routes/users');
 
 app.use('/products', productsRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/payment', paymentRouter);
 app.use('/api/orders', ordersRouter);
+app.use('/api/users', usersRouter);
 
 app.listen(port, () => {
     console.log(`Server is running on port: ${port}`);
