@@ -4,6 +4,7 @@ import { Table, Button, Space, Typography, message, Popconfirm } from 'antd';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import ProductEditModal from './ProductEditModal';
+import { Link } from 'react-router-dom';
 
 const { Title } = Typography;
 
@@ -79,7 +80,12 @@ const AdminDashboard = () => {
 
     return (
         <div>
-            <Title level={2}>Product Management</Title>
+            <Space style={{ marginBottom: 16 }}>
+                <Title level={2} style={{ margin: 0 }}>Product Management</Title>
+                <Link to="/admin/orders">
+                    <Button>Manage Orders</Button>
+                </Link>
+            </Space>
             <Button type="primary" style={{ marginBottom: 16 }} onClick={() => { setEditingProduct(null); setIsModalVisible(true); }}>
                 Add Product
             </Button>

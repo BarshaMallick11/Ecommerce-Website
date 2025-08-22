@@ -10,6 +10,7 @@ const orderSchema = new Schema({
     }],
     totalAmount: { type: Number, required: true },
     paymentId: { type: String, required: true },
+    isDelivered: { type: Boolean, default: false },
 }, {
     timestamps: true,
 });

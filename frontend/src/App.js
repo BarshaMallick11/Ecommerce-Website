@@ -17,6 +17,9 @@ import AdminDashboard from './components/AdminDashboard';
 import AdminRoute from './components/AdminRoute';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import AdminOrderList from './components/AdminOrderList';
+
+
 
 const { Header, Content, Footer } = Layout;
 const { Title } = Typography;
@@ -124,6 +127,7 @@ function App() {
                     <Route path="/orders" element={<OrderHistoryPage />} />
                     <Route path="/admin" element={<AdminRoute />}>
                         <Route path="" element={<AdminDashboard />} />
+                        <Route path="orders" element={<AdminOrderList />} />
                     </Route>
                   </Routes>
                 </div>
