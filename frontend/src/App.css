@@ -1,28 +1,85 @@
 /* frontend/src/App.css */
-@import 'antd/dist/reset.css';
 
-/* Your other styles can go here */
-.product-list {
-  padding: 24px;
+/* --- Main Content Responsive Padding --- */
+.site-content {
+  padding-left: 50px;
+  padding-right: 50px;
+  transition: padding 0.3s ease;
 }
 
+@media (max-width: 767px) {
+  .site-content {
+    padding-left: 16px; /* A much more suitable padding for mobile */
+    padding-right: 16px;
+  }
+}
 
-
-
-/* By default, hide the mobile-only hamburger icon */
-.mobile-nav-icon {
+/* --- Header Responsive Styles --- */
+.mobile-menu-icon {
   display: none;
 }
 
-/* This is the media query for mobile devices (screens smaller than 768px) */
-@media (max-width: 767px) {
-  /* Hide the desktop navigation links */
-  .desktop-nav-links {
+@media (max-width: 992px) {
+  .header-search,
+  .header-right-side {
     display: none;
   }
+  .mobile-menu-icon {
+    display: block;
+  }
+}
 
-  /* Show the mobile-only hamburger icon */
-  .mobile-nav-icon {
-    display: inline-block; /* Use inline-block to make it visible */
+/* --- Product Title Link Styles --- */
+.product-title-link,
+.product-title-link:visited {
+  color: #374151;
+  transition: color 0.3s;
+}
+
+.product-title-link:hover {
+  color: #446950;
+}
+
+/* --- Product Card Responsive Styles --- */
+.product-card-cover {
+  height: 200px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (max-width: 576px) {
+  .product-card-cover {
+    height: 120px;
+  }
+  .add-to-cart-btn span {
+    font-size: 12px;
+  }
+  /* NEW: Reduce product title font size on mobile */
+  .product-title-link {
+    font-size: 14px;
+  }
+}
+
+/* --- Admin Dashboard Responsive Styles --- */
+@media (max-width: 767px) {
+  .admin-dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .admin-actions {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: stretch;
+  }
+  .admin-actions .ant-space-item {
+    width: 100%;
+  }
+  .admin-actions .ant-space-item > .ant-btn,
+  .admin-actions .ant-space-item > a > .ant-btn {
+    width: 100%;
   }
 }

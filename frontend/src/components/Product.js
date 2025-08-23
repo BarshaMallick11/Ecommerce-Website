@@ -27,17 +27,15 @@ const Product = ({ product }) => {
     return (
         <Card
             hoverable
-            style={{ width: '100%' }}
+            style={{
+                width: '100%',
+                border: 'none',
+                backgroundColor: 'fff',
+                // boxShadow: 'none',
+            }}
             cover={
-                <div
-                    style={{
-                        height: 160, // CHANGED FROM 240 to 160
-                        overflow: 'hidden',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                    }}
-                >
+                // The inline 'style' prop has been removed and replaced with a className
+                <div className="product-card-cover">
                     <Link to={`/product/${product._id}`} style={{ width: '100%', height: '100%' }}>
                         <img
                             alt={product.name}
@@ -53,16 +51,19 @@ const Product = ({ product }) => {
             }
         >
             <Meta
-                title={<Link to={`/product/${product._id}`}>{product.name}</Link>}
+                title={<Link to={`/product/${product._id}`} className="product-title-link">{product.name}</Link>}
                 description={<Text strong>₹{product.price.toFixed(2)}</Text>}
             />
-            <Button type="primary" style={{ marginTop: '10px', width: '100%' }} onClick={handleAddToCart}>
+            <Button
+                className="add-to-cart-btn"
+                type="primary"
+                style={{ marginTop: '10px', width: '100%' }}
+                onClick={handleAddToCart}
+            >
                 Add to Cart
             </Button>
         </Card>
     );
 };
 
-
 export default Product;
-

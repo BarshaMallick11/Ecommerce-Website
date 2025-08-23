@@ -1,10 +1,12 @@
 // frontend/src/components/AdminQueryList.js
+
 import React, { useState, useEffect, useCallback } from 'react';
-import { Table, Button, Typography, message, Tag } from 'antd';
+import { List, Card, Button, Typography, message, Tag, Spin } from 'antd'; // Removed Menu
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import AdminNav from './AdminNav'; // <-- IMPORT THE NEW COMPONENT
 
-const { Title } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
 const AdminQueryList = () => {
     const [queries, setQueries] = useState([]);
@@ -29,25 +31,48 @@ const AdminQueryList = () => {
     }, [token, fetchQueries]);
 
     const handleResolve = async (id) => {
-        const config = { headers: { Authorization: `Bearer ${token}` } };
-        await axios.put(`http://localhost:5000/api/queries/${id}/resolve`, {}, config);
-        message.success('Query marked as resolved');
-        fetchQueries();
+        try {
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            await axios.put(`http://localhost:5000/api/queries/${id}/resolve`, {}, config);
+            message.success('Query marked as resolved');
+            fetchQueries();
+        } catch (error) {
+            message.error('Failed to resolve query');
+        }
     };
-
-    const columns = [
-        { title: 'Name', dataIndex: 'name', key: 'name' },
-        { title: 'Email', dataIndex: 'email', key: 'email' },
-        { title: 'Order ID', dataIndex: 'orderId', key: 'orderId' },
-        { title: 'Message', dataIndex: 'message', key: 'message', ellipsis: true },
-        { title: 'Status', dataIndex: 'isResolved', key: 'status', render: res => <Tag color={res ? 'green' : 'volcano'}>{res ? 'Resolved' : 'Pending'}</Tag> },
-        { title: 'Action', key: 'action', render: (_, rec) => !rec.isResolved && <Button onClick={() => handleResolve(rec._id)}>Mark Resolved</Button> },
-    ];
 
     return (
         <div>
-            <Title level={2}>Customer Queries</Title>
-            <Table columns={columns} dataSource={queries} rowKey="_id" loading={loading} />
+            <Title level={2}>Admin Dashboard</Title>
+            <AdminNav /> {/* <-- USE THE NEW COMPONENT */}
+
+            <Title level={4}>Customer Queries</Title>
+
+            {loading && queries.length === 0 ? <div style={{textAlign: 'center', marginTop: 50}}><Spin size="large"/></div> : (
+                <List
+                    grid={{ gutter: 16, xs: 1, sm: 1, md: 2, lg: 2, xl: 3 }}
+                    dataSource={queries}
+                    renderItem={(query) => (
+                        <List.Item>
+                            <Card
+                                title={query.name}
+                                extra={<Tag color={query.isResolved ? 'green' : 'volcano'}>{query.isResolved ? 'Resolved' : 'Pending'}</Tag>}
+                            >
+                                <p><Text strong>Email:</Text> {query.email}</p>
+                                {query.orderId && <p><Text strong>Order ID:</Text> {query.orderId}</p>}
+                                <Paragraph ellipsis={{ rows: 3, expandable: true, symbol: 'more' }}>
+                                    <Text strong>Message:</Text> {query.message}
+                                </Paragraph>
+                                {!query.isResolved && (
+                                    <Button type="primary" style={{ width: '100%', marginTop: 16 }} onClick={() => handleResolve(query._id)}>
+                                        Mark as Resolved
+                                    </Button>
+                                )}
+                            </Card>
+                        </List.Item>
+                    )}
+                />
+            )}
         </div>
     );
 };

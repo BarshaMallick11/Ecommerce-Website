@@ -1,10 +1,13 @@
 // frontend/src/components/AdminOrderList.js
-import React, { useState, useEffect, useCallback } from 'react'; // Import useCallback
-import { Table, Button, Typography, message, Tag, Modal, Form, Input, Select } from 'antd';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { List, Card, Button, Typography, message, Tag, Modal, Form, Input, Select, Spin } from 'antd';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import moment from 'moment';
+import AdminNav from './AdminNav'; // <-- IMPORT THE NEW COMPONENT
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
 
 const AdminOrderList = () => {
@@ -29,9 +32,7 @@ const AdminOrderList = () => {
     }, [token]);
 
     useEffect(() => {
-        if (token) {
-            fetchOrders();
-        }
+        if (token) { fetchOrders(); }
     }, [token, fetchOrders]);
 
     const handleUpdateStatus = async (values) => {
@@ -46,44 +47,55 @@ const AdminOrderList = () => {
         }
     };
 
-    const columns = [
-        { title: 'ID', dataIndex: '_id', key: 'id', ellipsis: true },
-        { title: 'User', dataIndex: 'user', key: 'user', render: user => user ? user.username : 'N/A' },
-        { title: 'Date', dataIndex: 'createdAt', key: 'date', render: date => new Date(date).toLocaleDateString() },
-        { title: 'Total', dataIndex: 'totalAmount', key: 'total', render: total => `₹${total.toFixed(2)}` },
-        { 
-            title: 'Status', 
-            dataIndex: 'status', 
-            key: 'status', 
-            render: status => {
-                let color = 'geekblue';
-                if (status === 'Shipped') color = 'orange';
-                if (status === 'Delivered') color = 'green';
-                return <Tag color={color}>{status ? status.toUpperCase() : 'N/A'}</Tag>;
-            }
-        },
-        {
-            title: 'Action',
-            key: 'action',
-            render: (_, record) => (
-                <Button onClick={() => { setCurrentOrder(record); form.setFieldsValue(record); setIsModalVisible(true); }}>
-                    Update Status
-                </Button>
-            ),
-        },
-    ];
+    const showUpdateModal = (order) => {
+        setCurrentOrder(order);
+        form.setFieldsValue({ status: order.status, trackingNumber: order.trackingNumber });
+        setIsModalVisible(true);
+    };
+
+    const StatusTag = ({ status }) => {
+        let color = 'geekblue';
+        if (status === 'Shipped') color = 'orange';
+        if (status === 'Delivered') color = 'green';
+        return <Tag color={color}>{status ? status.toUpperCase() : 'N/A'}</Tag>;
+    };
 
     return (
         <div>
-            <Title level={2}>Manage Orders</Title>
-            <Table columns={columns} dataSource={orders} rowKey="_id" loading={loading} />
+            <Title level={2}>Admin Dashboard</Title>
+            <AdminNav /> {/* <-- USE THE NEW COMPONENT */}
+
+            <Title level={4}>All Customer Orders</Title>
+
+            {loading && orders.length === 0 ? <div style={{textAlign: 'center', marginTop: 50}}><Spin size="large"/></div> : (
+                <List
+                    grid={{ gutter: 16, xs: 1, sm: 2, md: 2, lg: 3, xl: 4 }}
+                    dataSource={orders}
+                    renderItem={(order) => (
+                        <List.Item>
+                            <Card title={`Order: ...${order._id.substring(order._id.length - 6)}`}>
+                                <p><Text strong>User:</Text> {order.user ? order.user.username : 'N/A'}</p>
+                                <p><Text strong>Date:</Text> {moment(order.createdAt).format('YYYY-MM-DD')}</p>
+                                <p><Text strong>Total:</Text> ₹{order.totalAmount.toFixed(2)}</p>
+                                <p><Text strong>Status:</Text> <StatusTag status={order.status} /></p>
+                                {order.trackingNumber && <p><Text strong>Tracking #:</Text> {order.trackingNumber}</p>}
+                                <Button type="primary" style={{ width: '100%', marginTop: 16 }} onClick={() => showUpdateModal(order)}>
+                                    Update Status
+                                </Button>
+                            </Card>
+                        </List.Item>
+                    )}
+                />
+            )}
+
             <Modal
                 title="Update Order Status"
                 open={isModalVisible}
                 onCancel={() => setIsModalVisible(false)}
                 onOk={() => form.submit()}
+                destroyOnClose
             >
-                <Form form={form} onFinish={handleUpdateStatus} initialValues={{ status: currentOrder?.status, trackingNumber: currentOrder?.trackingNumber }}>
+                <Form form={form} layout="vertical" onFinish={handleUpdateStatus}>
                     <Form.Item name="status" label="Status">
                         <Select>
                             <Option value="Processing">Processing</Option>
@@ -92,7 +104,7 @@ const AdminOrderList = () => {
                         </Select>
                     </Form.Item>
                     <Form.Item name="trackingNumber" label="Tracking Number">
-                        <Input />
+                        <Input placeholder="Enter tracking number" />
                     </Form.Item>
                 </Form>
             </Modal>

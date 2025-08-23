@@ -5,7 +5,7 @@ import { Table, Button, Space, Typography, message, Popconfirm } from 'antd';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import ProductEditModal from './ProductEditModal';
-import { Link } from 'react-router-dom';
+import AdminNav from './AdminNav'; // <-- IMPORT THE NEW COMPONENT
 
 const { Title } = Typography;
 
@@ -71,7 +71,7 @@ const AdminDashboard = () => {
             render: (_, record) => (
                 <Space size="middle">
                     <Button onClick={() => { setEditingProduct(record); setIsModalVisible(true); }}>Edit</Button>
-                    <Popconfirm title="Are you sure to delete this product?" onConfirm={() => handleDelete(record._id)} okText="Yes" cancelText="No">
+                    <Popconfirm title="Are you sure?" onConfirm={() => handleDelete(record._id)} okText="Yes" cancelText="No">
                         <Button danger>Delete</Button>
                     </Popconfirm>
                 </Space>
@@ -81,25 +81,23 @@ const AdminDashboard = () => {
 
     return (
         <div>
-            {/* --- UPDATED HEADER LAYOUT --- */}
+            <Title level={2}>Admin Dashboard</Title>
+            <AdminNav /> {/* <-- USE THE NEW COMPONENT */}
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <Title level={2} style={{ margin: 0 }}>Product Management</Title>
-                <Space>
-                    <Link to="/admin/orders">
-                        <Button>Manage Orders</Button>
-                    </Link>
-                    <Link to="/admin/users">
-                        <Button>Manage Users</Button>
-                    </Link>
-                    <Link to="/admin/queries"><Button>Customer Queries</Button></Link>
-                    <Link to="/admin/settings"><Button>Site Settings</Button></Link>
-                    <Button type="primary" onClick={() => { setEditingProduct(null); setIsModalVisible(true); }}>
-                        Add Product
-                    </Button>
-                </Space>
+                <Title level={4} style={{ margin: 0 }}>All Products</Title>
+                <Button type="primary" onClick={() => { setEditingProduct(null); setIsModalVisible(true); }}>
+                    Add Product
+                </Button>
             </div>
 
-            <Table columns={columns} dataSource={products} rowKey="_id" loading={loading} />
+            <Table
+                columns={columns}
+                dataSource={products}
+                rowKey="_id"
+                loading={loading}
+                scroll={{ x: true }}
+            />
 
             <ProductEditModal
                 visible={isModalVisible}
@@ -112,4 +110,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-
