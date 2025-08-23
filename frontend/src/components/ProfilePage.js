@@ -1,5 +1,6 @@
 // frontend/src/components/ProfilePage.js
 import React, { useState, useEffect } from 'react';
+import BackButton from './BackButton';
 import { Typography, Button, message, Card, List, Popconfirm, Space } from 'antd';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -55,6 +56,7 @@ const ProfilePage = () => {
 
     return (
         <div>
+            <BackButton />
             <Title level={2}>My Profile</Title>
             <Card title="My Shipping Addresses" extra={<Button type="primary" onClick={() => { setEditingAddress(null); setIsModalVisible(true); }}>Add New Address</Button>}>
                 <List

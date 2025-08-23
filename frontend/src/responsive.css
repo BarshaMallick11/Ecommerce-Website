@@ -1,0 +1,19 @@
+/* frontend/src/responsive.css */
+.desktop-nav-links {
+    display: block;
+}
+
+.mobile-nav-icon {
+    display: none;
+}
+
+/* Media query for tablets and smaller devices */
+@media (max-width: 768px) {
+    .desktop-nav-links {
+        display: none;
+    }
+
+    .mobile-nav-icon {
+        display: block;
+    }
+}

@@ -65,8 +65,9 @@ const AppHeader = () => {
     ];
 
     return (
-        <Header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Link to="/">
+        <Header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' , padding: '0 24px'}}>
+            <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+                <img src="/premium.store.png" alt="Premium.com" style={{ height: '40px', marginRight: '15px'}} />
                 <Title level={3} style={{ color: 'white', lineHeight: '64px', margin: 0 }}>
                     Premium.Store
                 </Title>
@@ -125,7 +126,7 @@ function App() {
                 </div>
               </Content>
               <Footer style={{ textAlign: 'center' }}>
-                My E-Commerce Site ©2025 Created with Ant Design
+                Premium.Store ©2025 Created by Sudip Mallick | All Rights Reserved.
               </Footer>
             </Layout>
           </Router>

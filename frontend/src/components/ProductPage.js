@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useCallback } from 'react'; // Add useCallback
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import BackButton from './BackButton';
 import { Row, Col, Spin, Typography, Button, Image, Rate, Divider } from 'antd'; // Add Rate and Divider
 import { ShoppingCartOutlined } from '@ant-design/icons';
 import ProductReviews from './ProductReviews'; // Import the new component
@@ -43,6 +44,7 @@ const ProductPage = () => {
 
     return (
         <div>
+            <BackButton />
             <Row gutter={[32, 32]} style={{ padding: '24px' }}>
                 <Col xs={24} md={12}>
                     <Image
