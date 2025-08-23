@@ -91,6 +91,8 @@ const AdminDashboard = () => {
                     <Link to="/admin/users">
                         <Button>Manage Users</Button>
                     </Link>
+                    <Link to="/admin/queries"><Button>Customer Queries</Button></Link>
+                    <Link to="/admin/settings"><Button>Site Settings</Button></Link>
                     <Button type="primary" onClick={() => { setEditingProduct(null); setIsModalVisible(true); }}>
                         Add Product
                     </Button>

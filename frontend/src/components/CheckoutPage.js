@@ -16,6 +16,12 @@ const CheckoutPage = () => {
     const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     const handlePayment = async () => {
+        const shippingAddress = JSON.parse(localStorage.getItem('shippingAddress'));
+        if (!shippingAddress) {
+            message.error('Shipping address not found. Please go back.');
+            return;
+        }
+
         if (!user) {
             message.error('Please log in to proceed with the payment.');
             navigate('/login');
@@ -38,9 +44,11 @@ const CheckoutPage = () => {
                             ...response,
                             cartItems: cartItems,
                             totalAmount: total,
-                            token: token // Send the auth token
+                            token: token ,// Send the auth token
+                            shippingAddress
                         };
                         await axios.post('http://localhost:5000/api/payment/verify-payment', verificationData);
+                        localStorage.removeItem('shippingAddress');
                         message.success('Payment successful!');
                         clearCart();
                         navigate('/orders'); // Navigate to order history

@@ -42,7 +42,7 @@ const CartPage = () => {
             <Row justify="end" style={{ marginTop: '24px' }}>
                 <Col>
                     <Title level={4}>Total: ₹{total.toFixed(2)}</Title>
-                    <Link to="/checkout">  {/* Add this Link component */}
+                    <Link to="/shipping">  {/* Add this Link component */}
                         <Button type="primary" size="large">Proceed to Checkout</Button>
                     </Link>
                 </Col>
