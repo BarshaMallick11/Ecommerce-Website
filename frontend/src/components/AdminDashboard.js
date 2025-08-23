@@ -1,4 +1,5 @@
 // frontend/src/components/AdminDashboard.js
+
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Space, Typography, message, Popconfirm } from 'antd';
 import axios from 'axios';
@@ -80,16 +81,26 @@ const AdminDashboard = () => {
 
     return (
         <div>
-            <Space style={{ marginBottom: 16 }}>
+            {/* --- UPDATED HEADER LAYOUT --- */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                 <Title level={2} style={{ margin: 0 }}>Product Management</Title>
-                <Link to="/admin/orders">
-                    <Button>Manage Orders</Button>
-                </Link>
-            </Space>
-            <Button type="primary" style={{ marginBottom: 16 }} onClick={() => { setEditingProduct(null); setIsModalVisible(true); }}>
-                Add Product
-            </Button>
+                <Space>
+                    <Link to="/admin/orders">
+                        <Button>Manage Orders</Button>
+                    </Link>
+                    <Link to="/admin/users">
+                        <Button>Manage Users</Button>
+                    </Link>
+                    <Link to="/admin/queries"><Button>Customer Queries</Button></Link>
+                    <Link to="/admin/settings"><Button>Site Settings</Button></Link>
+                    <Button type="primary" onClick={() => { setEditingProduct(null); setIsModalVisible(true); }}>
+                        Add Product
+                    </Button>
+                </Space>
+            </div>
+
             <Table columns={columns} dataSource={products} rowKey="_id" loading={loading} />
+
             <ProductEditModal
                 visible={isModalVisible}
                 onCancel={() => { setIsModalVisible(false); setEditingProduct(null); }}
@@ -101,3 +112,4 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+

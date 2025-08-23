@@ -10,7 +10,21 @@ const orderSchema = new Schema({
     }],
     totalAmount: { type: Number, required: true },
     paymentId: { type: String, required: true },
-    isDelivered: { type: Boolean, default: false },
+    //isDelivered: { type: Boolean, default: false },
+    shippingAddress: { // Add this object
+        address: { type: String, required: true },
+        city: { type: String, required: true },
+        postalCode: { type: String, required: true },
+        country: { type: String, required: true },
+        phoneNo: { type: String, required: true },
+    },
+    status: { 
+        type: String, 
+        required: true, 
+        enum: ['Processing', 'Shipped', 'Delivered'], 
+        default: 'Processing' 
+    },
+    trackingNumber: { type: String, default: '' },
 }, {
     timestamps: true,
 });

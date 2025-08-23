@@ -35,7 +35,7 @@ router.post('/create-order', async (req, res) => {
 });
 
 router.post('/verify-payment', async (req, res) => {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, cartItems, totalAmount, token } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, cartItems, totalAmount, token, shippingAddress } = req.body;
     const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
     shasum.update(`${razorpay_order_id}|${razorpay_payment_id}`);
     const digest = shasum.digest('hex');
@@ -50,6 +50,7 @@ router.post('/verify-payment', async (req, res) => {
                 products: cartItems.map(item => ({ product: item, quantity: item.quantity })),
                 totalAmount: totalAmount,
                 paymentId: razorpay_payment_id,
+                shippingAddress: shippingAddress,
             });
 
             await newOrder.save();

@@ -1,69 +1,77 @@
 // frontend/src/components/ProductPage.js
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom'; // Import useNavigate
+// frontend/src/components/ProductPage.js
+import React, { useState, useEffect, useCallback } from 'react'; // Add useCallback
+import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Row, Col, Typography, Button, Spin, Image, message } from 'antd'; // Import message
+import BackButton from './BackButton';
+import { Row, Col, Spin, Typography, Button, Image, Rate, Divider } from 'antd'; // Add Rate and Divider
+import { ShoppingCartOutlined } from '@ant-design/icons';
+import ProductReviews from './ProductReviews'; // Import the new component
 import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext'; // Import useAuth
 
-const { Title, Text } = Typography;
+const { Title, Paragraph, Text } = Typography;
 
 const ProductPage = () => {
-    const { id } = useParams();
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
+    const { id } = useParams();
     const { addToCart } = useCart();
-    const { user } = useAuth(); // NEW: Get the current user status
-    const navigate = useNavigate(); // NEW: Get the navigate function for redirection
 
-    useEffect(() => {
-        const fetchProduct = async () => {
-            try {
-                setLoading(true);
-                const { data } = await axios.get(`http://localhost:5000/products/${id}`);
-                setProduct(data);
-            } catch (error) {
-                console.error('Failed to fetch product', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchProduct();
+    const fetchProduct = useCallback(async () => {
+        setLoading(true);
+        try {
+            const { data } = await axios.get(`http://localhost:5000/products/${id}`);
+            setProduct(data);
+        } catch (error) {
+            console.error("Failed to fetch product", error);
+        } finally {
+            setLoading(false);
+        }
     }, [id]);
 
-    // NEW: Updated logic for the "Add to Cart" button
-    const handleAddToCart = () => {
-        if (user) {
-            // If user is logged in, add the item to the cart
-            addToCart(product);
-            message.success(`${product.name} added to cart`);
-        } else {
-            // If user is not logged in, show a message and redirect to the login page
-            message.warning('Please log in to add items to your cart.');
-            navigate('/login');
-        }
-    };
+    useEffect(() => {
+        fetchProduct();
+    }, [fetchProduct]);
 
-    if (loading) return <Spin size="large" />;
-    if (!product) return <p>Product not found.</p>;
+    if (loading) {
+        return <div style={{ textAlign: 'center', padding: '50px' }}><Spin size="large" /></div>;
+    }
+
+    if (!product) {
+        return <Title level={3}>Product not found!</Title>;
+    }
 
     return (
-        <Row gutter={[32, 32]}>
-            <Col xs={24} md={12}>
-                <Image width="100%" src={product.image} alt={product.name} />
-            </Col>
-            <Col xs={24} md={12}>
-                <Title level={2}>{product.name}</Title>
-                <Text strong style={{ fontSize: '24px' }}>₹{product.price.toFixed(2)}</Text>
-                <Title level={4}>Description</Title>
-                <Text>{product.description}</Text>
-                <br />
-                <Button type="primary" size="large" style={{ marginTop: '20px' }} onClick={handleAddToCart}>
-                    Add to Cart
-                </Button>
-            </Col>
-        </Row>
+        <div>
+            <BackButton />
+            <Row gutter={[32, 32]} style={{ padding: '24px' }}>
+                <Col xs={24} md={12}>
+                    <Image
+                        width="100%"
+                        src={product.image || 'https://placehold.co/600x600/EEE/31343C?text=No+Image'}
+                        alt={product.name}
+                    />
+                </Col>
+                <Col xs={24} md={12}>
+                    <Title level={2}>{product.name}</Title>
+                    <Rate disabled value={product.rating} /> <Text>({product.numReviews} reviews)</Text>
+                    <Paragraph style={{ marginTop: '10px' }}>{product.description}</Paragraph>
+                    <Text strong style={{ fontSize: '24px' }}>₹{product.price.toFixed(2)}</Text>
+                    <div style={{ marginTop: '24px' }}>
+                        <Button type="primary" size="large" icon={<ShoppingCartOutlined />} onClick={() => addToCart(product)}>
+                            Add to Cart
+                        </Button>
+                    </div>
+                </Col>
+            </Row>
+            <Divider />
+            <Row style={{ padding: '24px' }}>
+                <Col span={24}>
+                    <ProductReviews product={product} fetchProduct={fetchProduct} />
+                </Col>
+            </Row>
+        </div>
     );
 };
 

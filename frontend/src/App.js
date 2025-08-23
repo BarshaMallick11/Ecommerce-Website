@@ -1,10 +1,9 @@
 // frontend/src/App.js
-
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import './App.css';
-import { Layout, Typography, Button, Space, Drawer, Divider, Dropdown, Menu } from 'antd';
-import { MenuOutlined, DownOutlined } from '@ant-design/icons';
+import { Layout, Typography, Button, Space, Dropdown } from 'antd';
+import { DownOutlined } from '@ant-design/icons';
 import ProductList from "./components/ProductList";
 import ProductPage from "./components/ProductPage";
 import CartPage from "./components/CartPage";
@@ -13,12 +12,19 @@ import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import CheckoutPage from './components/CheckoutPage';
 import OrderHistoryPage from './components/OrderHistoryPage';
+import ProfilePage from './components/ProfilePage';
+import ShippingPage from './components/ShippingPage';
 import AdminDashboard from './components/AdminDashboard';
 import AdminRoute from './components/AdminRoute';
+import AdminOrderList from './components/AdminOrderList';
+import AdminUserList from './components/AdminUserList';
+import SearchBox from './components/SearchBox';
+import TrackOrderPage from './components/TrackOrderPage';
+import HelpPage from './components/HelpPage';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import AdminOrderList from './components/AdminOrderList';
-
+import AdminQueryList from './components/AdminQueryList';
+import AdminSettings from './components/AdminSettings';
 
 
 const { Header, Content, Footer } = Layout;
@@ -26,84 +32,63 @@ const { Title } = Typography;
 
 const AppHeader = () => {
     const { user, logout } = useAuth();
-    const [drawerVisible, setDrawerVisible] = useState(false);
 
-    const showDrawer = () => setDrawerVisible(true);
-    const closeDrawer = () => setDrawerVisible(false);
-
-    // --- Dropdown menu items for desktop ---
     const menuItems = [
-        user?.isAdmin && {
-            key: 'admin',
-            label: (<Link to="/admin">Admin Panel</Link>),
+        {
+            key: '1',
+            label: <Link to="/">Home</Link>,
         },
         {
-            key: 'orders',
-            label: (<Link to="/orders">Order History</Link>),
+            key: '2',
+            label: <Link to="/profile">My Profile</Link>,
         },
         {
-            key: 'logout',
-            label: (<div onClick={logout}>Logout</div>),
-        }
-    ].filter(Boolean); // Removes any false items (like admin link if not admin)
-
-    // --- Navigation links for the mobile drawer ---
-    const MobileNavLinks = () => (
-        <Space direction={'vertical'} align={'start'} size="middle">
-            {user && user.isAdmin && (
-                <Link to="/admin" onClick={closeDrawer}><Button>Admin Panel</Button></Link>
-            )}
-            {user ? (
-                <>
-                    <span style={{ color: 'black', fontWeight: 'bold' }}>Welcome, {user.username}</span>
-                    <Link to="/orders" onClick={closeDrawer}><Button type="primary">Order History</Button></Link>
-                    <Button type="primary" onClick={() => { logout(); closeDrawer(); }}>Logout</Button>
-                </>
-            ) : (
-                <Link to="/login" onClick={closeDrawer}><Button type="primary">Login</Button></Link>
-            )}
-        </Space>
-    );
+            key: '3',
+            label: <Link to="/orders">Order History</Link>,
+        },
+        {
+            key: '4',
+            label: <Link to="/track-order">Track Order</Link>,
+        },
+        ...(user && user.isAdmin ? [{
+            key: '5',
+            label: <Link to="/admin">Admin Panel</Link>,
+        }] : []),
+        {
+            key: '6',
+            label: <Link to="/help">Help & Contact</Link>,
+        },
+        {
+            key: '7',
+            label: <div onClick={logout}>Logout</div>,
+        },
+    ];
 
     return (
-        <Header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 24px' }}>
-            <Link to="/">
+        <Header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' , padding: '0 24px'}}>
+            <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+                <img src="/premium.store.png" alt="Premium.com" style={{ height: '40px', marginRight: '15px'}} />
                 <Title level={3} style={{ color: 'white', lineHeight: '64px', margin: 0 }}>
-                    ShopCart
+                    Premium.Store
                 </Title>
             </Link>
 
-            {/* --- Desktop Navigation --- */}
-            <div className="desktop-nav-links">
-                <Space align="center" size="large">
-                    {user ? (
-                        <Dropdown menu={{ items: menuItems }} placement="bottomRight">
-                            <Button ghost>
-                                Welcome, {user.username} <DownOutlined />
-                            </Button>
-                        </Dropdown>
-                    ) : (
-                        <Link to="/login"><Button type="primary">Login</Button></Link>
-                    )}
-                    <CartIcon />
-                </Space>
-            </div>
+            <SearchBox />
 
-            {/* --- Mobile Navigation --- */}
-            <div className="mobile-nav-icon">
-                <Button type="primary" onClick={showDrawer}>
-                    <MenuOutlined />
-                </Button>
-            </div>
-
-            <Drawer title="Menu" placement="right" onClose={closeDrawer} open={drawerVisible}>
-                <Link to="/cart" onClick={closeDrawer} style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit', marginBottom: '20px' }}>
-                    <CartIcon />
-                    <span style={{ marginLeft: 16, fontSize: 16 }}>View Cart</span>
-                </Link>
-                <Divider />
-                <MobileNavLinks />
-            </Drawer>
+            <Space>
+                {user ? (
+                    <Dropdown menu={{ items: menuItems }} placement="bottomRight">
+                        <Button type="primary">
+                            Welcome, {user.username} <DownOutlined />
+                        </Button>
+                    </Dropdown>
+                ) : (
+                    <Link to="/login">
+                        <Button type="primary">Login</Button>
+                    </Link>
+                )}
+                <CartIcon />
+            </Space>
         </Header>
     );
 };
@@ -115,25 +100,33 @@ function App() {
           <Router>
             <Layout className="layout">
               <AppHeader />
-              <Content style={{ padding: '0 24px' }}>
-                <div className="site-layout-content" style={{ background: '#fff', padding: 24, minHeight: 280, marginTop: 24 }}>
+              <Content style={{ padding: '0 50px' }}>
+                <div className="site-layout-content" style={{ background: '#fff', padding: 24, minHeight: 280 }}>
                   <Routes>
                     <Route path="/" element={<ProductList />} />
+                    <Route path="/search/:keyword" element={<ProductList />} />
                     <Route path="/product/:id" element={<ProductPage />} />
                     <Route path="/cart" element={<CartPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/checkout" element={<CheckoutPage />} />
                     <Route path="/orders" element={<OrderHistoryPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/shipping" element={<ShippingPage />} />
+                    <Route path="/track-order" element={<TrackOrderPage />} />
+                    <Route path="/help" element={<HelpPage />} />
                     <Route path="/admin" element={<AdminRoute />}>
                         <Route path="" element={<AdminDashboard />} />
                         <Route path="orders" element={<AdminOrderList />} />
+                        <Route path="users" element={<AdminUserList />} />
+                        <Route path="queries" element={<AdminQueryList />} />
+                        <Route path="settings" element={<AdminSettings />} />
                     </Route>
                   </Routes>
                 </div>
               </Content>
               <Footer style={{ textAlign: 'center' }}>
-                ShopCart ©2025 All rights reserved
+                Premium.Store ©2025 Created by Sudip Mallick | All Rights Reserved.
               </Footer>
             </Layout>
           </Router>

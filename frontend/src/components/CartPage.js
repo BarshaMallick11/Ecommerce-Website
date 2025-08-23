@@ -1,11 +1,12 @@
 // frontend/src/components/CartPage.js
 import React from 'react';
+import BackButton from './BackButton';
 import { useCart } from '../context/CartContext';
 import { List, Button, Typography, Row, Col, Empty } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
-const { Title, Text } = Typography;
+const { Title} = Typography;
 
 const CartPage = () => {
     const { cartItems, removeFromCart } = useCart();
@@ -18,6 +19,7 @@ const CartPage = () => {
 
     return (
         <div>
+            <BackButton />
             <Title level={2}>Shopping Cart</Title>
             <List
                 itemLayout="horizontal"
@@ -42,7 +44,7 @@ const CartPage = () => {
             <Row justify="end" style={{ marginTop: '24px' }}>
                 <Col>
                     <Title level={4}>Total: ₹{total.toFixed(2)}</Title>
-                    <Link to="/checkout">  {/* Add this Link component */}
+                    <Link to="/shipping">  {/* Add this Link component */}
                         <Button type="primary" size="large">Proceed to Checkout</Button>
                     </Link>
                 </Col>
