@@ -13,13 +13,27 @@ export const CartProvider = ({ children }) => {
         setCartItems(prevItems => {
             const itemExists = prevItems.find(item => item._id === product._id);
             if (itemExists) {
-                message.success(`${product.name} quantity updated in cart!`);
                 return prevItems.map(item =>
                     item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
                 );
             }
-            message.success(`${product.name} added to cart!`);
             return [...prevItems, { ...product, quantity: 1 }];
+        });
+        message.success({ content: `${product.name} added to cart!`, key: 'addToCartMessage', duration: 2 });
+    };
+
+    const decreaseQuantity = (productId) => {
+        setCartItems(prevItems => {
+            const itemExists = prevItems.find(item => item._id === productId);
+            if (itemExists.quantity === 1) {
+                // If quantity is 1, remove the item
+                return prevItems.filter(item => item._id !== productId);
+            } else {
+                // Otherwise, decrease the quantity
+                return prevItems.map(item =>
+                    item._id === productId ? { ...item, quantity: item.quantity - 1 } : item
+                );
+            }
         });
     };
 
@@ -28,10 +42,16 @@ export const CartProvider = ({ children }) => {
         message.info(`Item removed from cart!`);
     };
 
+    const clearCart = () => {
+        setCartItems([]);
+    }
+
     const value = {
         cartItems,
         addToCart,
+        decreaseQuantity, // Add this
         removeFromCart,
+        clearCart
     };
 
     return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

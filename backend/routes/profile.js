@@ -32,6 +32,31 @@ router.post('/address', protect, async (req, res) => {
         res.status(400).json({ message: 'Error adding address' });
     }
 });
+// @desc   Update user profile
+// @route  PUT /api/profile
+// @access Private
+router.put('/', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (user) {
+            user.username = req.body.username || user.username;
+            user.email = req.body.email || user.email;
+
+            const updatedUser = await user.save();
+            res.json({
+                _id: updatedUser._id,
+                username: updatedUser.username,
+                email: updatedUser.email,
+                isAdmin: updatedUser.isAdmin,
+            });
+        } else {
+            res.status(404).json({ message: 'User not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
 
 // @desc   Update a shipping address
 // @route  PUT /api/profile/address/:id

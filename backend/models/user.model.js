@@ -15,6 +15,8 @@ const userSchema = new Schema({
     password: { type: String, required: true, minlength: 6 },
     isAdmin: { type: Boolean, default: false },
     shippingAddresses: [addressSchema],
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
 }, {
     timestamps: true,
 });

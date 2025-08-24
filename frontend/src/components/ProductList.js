@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Row, Col, Spin, Typography } from 'antd';
 import Product from './Product';
 import { useParams } from 'react-router-dom';
+import BackButton from './BackButton';
 
 const { Title } = Typography;
 
@@ -34,6 +35,7 @@ const ProductList = () => {
 
     return (
         <div>
+            {keyword && <BackButton />}
             <Title level={2} style={{ textAlign: 'center', margin: '40px 0' }}>
                 {keyword ? `Search Results for "${keyword}"` : 'Our Products'}
             </Title>

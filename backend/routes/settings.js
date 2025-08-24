@@ -16,6 +16,7 @@ router.get('/', async (req, res) => {
 router.put('/', protect, admin, async (req, res) => {
     let settings = await Setting.findOne();
     settings.contactPhone = req.body.contactPhone || settings.contactPhone;
+    settings.contactEmail = req.body.contactEmail || settings.contactEmail; 
     const updatedSettings = await settings.save();
     res.json(updatedSettings);
 });

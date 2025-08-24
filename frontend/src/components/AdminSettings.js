@@ -1,29 +1,28 @@
 // frontend/src/components/AdminSettings.js
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form, Input, Button, Card, Typography, message, Spin } from 'antd';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import AdminNav from './AdminNav';
+import AdminNav from './AdminNav'; // Assuming you have created this component
 
 const { Title } = Typography;
 
 const AdminSettings = () => {
     const [form] = Form.useForm();
     const { token } = useAuth();
-    const [loading, setLoading] = React.useState(true);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchSettings = async () => {
+            setLoading(true);
             try {
-                setLoading(true);
-                // The GET request for settings does not need an auth token
                 const { data } = await axios.get('http://localhost:5000/api/settings');
-                if (data) {
-                    form.setFieldsValue(data);
-                }
+                form.setFieldsValue({ 
+                    contactPhone: data.contactPhone,
+                    contactEmail: data.contactEmail
+                });
             } catch (error) {
-                message.error('Could not load site settings.');
+                message.error("Could not load site settings.");
             } finally {
                 setLoading(false);
             }
@@ -32,10 +31,10 @@ const AdminSettings = () => {
     }, [form]);
 
     const onFinish = async (values) => {
+        const config = { headers: { Authorization: `Bearer ${token}` } };
         try {
-            const config = { headers: { Authorization: `Bearer ${token}` } };
             await axios.put('http://localhost:5000/api/settings', values, config);
-            message.success('Settings updated successfully!');
+            message.success('Settings updated!');
         } catch (error) {
             message.error('Failed to update settings.');
         }
@@ -46,7 +45,7 @@ const AdminSettings = () => {
             <Title level={2}>Admin Dashboard</Title>
             <AdminNav />
 
-            <Title level={4}>Site Settings</Title>
+            <Title level={4} style={{ marginTop: '24px' }}>Site Settings</Title>
 
             {loading ? <Spin /> : (
                 <Card>
@@ -54,6 +53,9 @@ const AdminSettings = () => {
                     <Form form={form} onFinish={onFinish} layout="vertical">
                         <Form.Item name="contactPhone" label="Contact Phone Number for Help Page">
                             <Input placeholder="Enter a phone number" />
+                        </Form.Item>
+                        <Form.Item name="contactEmail" label="Contact Email for Help Page">
+                            <Input placeholder="Enter an email address" />
                         </Form.Item>
                         <Form.Item>
                             <Button type="primary" htmlType="submit">Save Settings</Button>

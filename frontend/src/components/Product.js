@@ -17,7 +17,7 @@ const Product = ({ product }) => {
     const handleAddToCart = () => {
         if (user) {
             addToCart(product);
-            message.success(`${product.name} added to cart`);
+            //message.success(`${product.name} added to cart`);
         } else {
             message.warning('Please log in to add items to your cart.');
             navigate('/login');

@@ -1,5 +1,6 @@
 // frontend/src/components/HelpPage.js
 import React, { useState, useEffect } from 'react';
+import BackButton from './BackButton';
 import { Card, Typography, Form, Input, Button, Space, message } from 'antd';
 import { MailOutlined, PhoneOutlined } from '@ant-design/icons';
 import axios from 'axios';
@@ -12,11 +13,13 @@ const HelpPage = () => {
     const [form] = Form.useForm();
     const { user } = useAuth();
     const [phone, setPhone] = useState('');
+    const [email, setEmail] = useState(''); // Correctly declare state for email
 
     useEffect(() => {
         const fetchSettings = async () => {
             const { data } = await axios.get('http://localhost:5000/api/settings');
             setPhone(data.contactPhone);
+            setEmail(data.contactEmail); // Correctly set the email
         };
         fetchSettings();
         if (user) {
@@ -36,12 +39,13 @@ const HelpPage = () => {
 
     return (
         <div style={{ maxWidth: '800px', margin: 'auto' }}>
+            <BackButton />
             <Title level={2} style={{ textAlign: 'center', marginBottom: '24px' }}>Help & Contact</Title>
             <Card title="Contact Us">
                 <p>For immediate assistance, please call us. For other inquiries, please use the form below.</p>
                 <Space direction="vertical" style={{ marginBottom: 24 }}>
                     <Text><PhoneOutlined style={{ marginRight: '8px' }} /> <a href={`tel:${phone}`}>{phone}</a></Text>
-                    <Text><MailOutlined style={{ marginRight: '8px' }} /> barshamallick57@gmail.com</Text>
+                    <Text><MailOutlined style={{ marginRight: '8px' }} /> <a href={`mailto:${email}`}>{email}</a></Text>
                 </Space>
                 <Form form={form} layout="vertical" onFinish={onFinish}>
                     <Form.Item name="name" label="Your Name" rules={[{ required: true }]}>

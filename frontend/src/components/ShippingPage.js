@@ -1,5 +1,6 @@
 // frontend/src/components/ShippingPage.js
 import React, { useState, useEffect, useCallback } from 'react'; // Import useCallback
+import BackButton from './BackButton';
 import { Typography, Radio, Button, message, Card, Space } from 'antd';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -19,10 +20,10 @@ const ShippingPage = () => {
         const config = { headers: { Authorization: `Bearer ${token}` } };
         const { data } = await axios.get('http://localhost:5000/api/profile', config);
         setAddresses(data.shippingAddresses);
-        if (!selectedAddress && data.shippingAddresses.length > 0) {
+        /*if (!selectedAddress && data.shippingAddresses.length > 0) {
             setSelectedAddress(data.shippingAddresses[0]);
-        }
-    }, [token, selectedAddress]);
+        }*/
+    }, [token]);
 
     useEffect(() => {
         if (token) fetchAddresses();
@@ -51,6 +52,7 @@ const ShippingPage = () => {
 
     return (
         <div style={{ maxWidth: '600px', margin: 'auto' }}>
+            <BackButton />
             <Title level={2}>Shipping Address</Title>
             <Button type="dashed" onClick={() => setIsModalVisible(true)} style={{ marginBottom: 24 }}>
                 Add New Address

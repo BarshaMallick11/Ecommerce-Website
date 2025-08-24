@@ -1,5 +1,6 @@
 // frontend/src/components/OrderHistoryPage.js
 import React, { useState, useEffect } from 'react';
+import BackButton from './BackButton';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { List, Typography, Spin, Card } from 'antd';
@@ -36,6 +37,7 @@ const OrderHistoryPage = () => {
 
     return (
         <div>
+            <BackButton />
             <Title level={2}>My Orders</Title>
             <List
                 grid={{ gutter: 16, column: 1 }}

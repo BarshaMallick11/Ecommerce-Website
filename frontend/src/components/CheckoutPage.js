@@ -1,5 +1,6 @@
 // frontend/src/components/CheckoutPage.js
 import React from 'react';
+import BackButton from './BackButton';
 import { Button, Typography, message } from 'antd';
 import axios from 'axios';
 import { useCart } from '../context/CartContext';
@@ -73,6 +74,7 @@ const CheckoutPage = () => {
 
     return (
         <div style={{ maxWidth: '500px', margin: 'auto' }}>
+            <BackButton />
             <Title level={2}>Checkout Summary</Title>
             {/* You can add a summary of cart items here */}
             <Title level={4}>Total: ₹{total.toFixed(2)}</Title>

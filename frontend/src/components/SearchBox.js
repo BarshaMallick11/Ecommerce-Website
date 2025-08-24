@@ -4,7 +4,7 @@ import { AutoComplete, Input } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const SearchBox = () => {
+const SearchBox = ({ onSearchCallback }) => {
     const navigate = useNavigate();
     const [options, setOptions] = useState([]);
 
@@ -23,7 +23,14 @@ const SearchBox = () => {
     };
 
     const onSelect = (value) => {
-        navigate(`/search/${value}`);
+        if (value.trim()) {
+            navigate(`/search/${value}`);
+        } else {
+            navigate('/');
+        }
+        if (onSearchCallback) {
+            onSearchCallback(); // Call the callback to close the drawer
+        }
     };
 
     return (

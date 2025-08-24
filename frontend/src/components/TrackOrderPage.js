@@ -1,5 +1,6 @@
 // frontend/src/components/TrackOrderPage.js
 import React, { useState } from 'react';
+import BackButton from './BackButton';
 import { Input, Card, Typography, message, Steps } from 'antd';
 import axios from 'axios';
 
@@ -38,6 +39,7 @@ const TrackOrderPage = () => {
 
     return (
         <div style={{ maxWidth: '600px', margin: 'auto' }}>
+            <BackButton />
             <Title level={2}>Track Your Order</Title>
             <Input.Search
                 placeholder="Enter your Order ID"

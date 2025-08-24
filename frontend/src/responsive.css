@@ -1,6 +1,7 @@
 /* frontend/src/responsive.css */
 .desktop-nav-links {
-    display: block;
+    display: flex;
+    align-items: center;
 }
 
 .mobile-nav-icon {
@@ -15,5 +16,9 @@
 
     .mobile-nav-icon {
         display: block;
+    }
+
+    .cart-icon {
+        font-size: 20px !important; /* This will make the icon smaller on mobile */
     }
 }

@@ -12,7 +12,7 @@ const CartIcon = () => {
     return (
         <Link to="/cart">
             <Badge count={itemCount}>
-                <ShoppingCartOutlined style={{ fontSize: '24px', color: 'white' }} />
+                <ShoppingCartOutlined className="cart-icon" style={{ fontSize: '24px', color: 'white' }} />
             </Badge>
         </Link>
     );

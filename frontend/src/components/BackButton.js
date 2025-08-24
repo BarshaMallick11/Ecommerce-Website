@@ -10,9 +10,9 @@ const BackButton = () => {
         <Button 
             icon={<ArrowLeftOutlined />} 
             onClick={() => navigate(-1)}
-            style={{ marginBottom: '24px' }}
+            style={{ marginBottom: '1px' }}
         >
-            Back
+
         </Button>
     );
 };
