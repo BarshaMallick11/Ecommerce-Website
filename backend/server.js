@@ -9,8 +9,11 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: "*"
+  origin: ["https://premiumstore1.vercel.app/"], // your new frontend domain
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
 }));
+
 
 app.use(express.json());
 
