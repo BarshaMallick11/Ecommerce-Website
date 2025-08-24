@@ -12,7 +12,7 @@ const RegisterPage = () => {
 
     const onFinish = async (values) => {
         try {
-            await axios.post('http://localhost:5000/api/auth/register', values);
+            await axios.post('${process.env.REACT_APP_API_URL}/api/auth/register', values);
             message.success('Registration successful! Please log in.');
             navigate('/login');
         } catch (err) {

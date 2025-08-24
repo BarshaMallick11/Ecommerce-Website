@@ -11,7 +11,7 @@ const SearchBox = ({ onSearchCallback }) => {
     const handleSearch = async (value) => {
         if (value) {
             try {
-                const { data } = await axios.get(`http://localhost:5000/products/autocomplete?query=${value}`);
+                const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/products/autocomplete?query=${value}`);
                 setOptions(data);
             } catch (error) {
                 console.error("Autocomplete search failed", error);

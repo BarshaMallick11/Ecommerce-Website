@@ -18,7 +18,7 @@ const ProductList = () => {
             setLoading(true);
             try {
                 const url = keyword ? `/products?keyword=${keyword}` : '/products';
-                const { data } = await axios.get(`http://localhost:5000${url}`);
+                const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/products/`);
                 setProducts(data);
             } catch (error) {
                 console.error("Failed to fetch products:", error);

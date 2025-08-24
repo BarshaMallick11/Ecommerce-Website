@@ -18,7 +18,7 @@ const ShippingPage = () => {
 
     const fetchAddresses = useCallback(async () => {
         const config = { headers: { Authorization: `Bearer ${token}` } };
-        const { data } = await axios.get('http://localhost:5000/api/profile', config);
+        const { data } = await axios.get('${process.env.REACT_APP_API_URL}/api/profile', config);
         setAddresses(data.shippingAddresses);
         /*if (!selectedAddress && data.shippingAddresses.length > 0) {
             setSelectedAddress(data.shippingAddresses[0]);
@@ -41,7 +41,7 @@ const ShippingPage = () => {
     const handleAddAddress = async (values) => {
         const config = { headers: { Authorization: `Bearer ${token}` } };
         try {
-            const { data } = await axios.post('http://localhost:5000/api/profile/address', values, config);
+            const { data } = await axios.post('${process.env.REACT_APP_API_URL}/api/profile/address', values, config);
             setAddresses(data);
             setIsModalVisible(false);
             message.success('Address added successfully!');

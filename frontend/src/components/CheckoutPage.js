@@ -30,7 +30,7 @@ const CheckoutPage = () => {
         }
 
         try {
-            const { data: order } = await axios.post('http://localhost:5000/api/payment/create-order', { items: cartItems });
+            const { data: order } = await axios.post('${process.env.REACT_APP_API_URL}/api/payment/create-order', { items: cartItems });
 
             const options = {
                 key: 'rzp_test_1DP5mmOlF5G5ag', // Enter the Key ID generated from the Dashboard
@@ -48,7 +48,7 @@ const CheckoutPage = () => {
                             token: token ,// Send the auth token
                             shippingAddress
                         };
-                        await axios.post('http://localhost:5000/api/payment/verify-payment', verificationData);
+                        await axios.post('${process.env.REACT_APP_API_URL}/api/payment/verify-payment', verificationData);
                         localStorage.removeItem('shippingAddress');
                         message.success('Payment successful!');
                         clearCart();

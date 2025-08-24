@@ -22,7 +22,7 @@ const AdminOrderList = () => {
         setLoading(true);
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            const { data } = await axios.get('http://localhost:5000/api/orders/all', config);
+            const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/orders/all`, config);
             setOrders(data);
         } catch (error) {
             message.error('Failed to fetch orders');
@@ -38,7 +38,7 @@ const AdminOrderList = () => {
     const handleUpdateStatus = async (values) => {
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            await axios.put(`http://localhost:5000/api/orders/${currentOrder._id}/status`, values, config);
+            await axios.put(`${process.env.REACT_APP_API_URL}/api/orders/${currentOrder._id}/status`, values, config);
             message.success('Order status updated');
             setIsModalVisible(false);
             fetchOrders();

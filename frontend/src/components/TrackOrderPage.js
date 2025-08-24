@@ -19,7 +19,7 @@ const TrackOrderPage = () => {
         }
         setLoading(true);
         try {
-            const { data } = await axios.get(`http://localhost:5000/api/orders/track/${orderId}`);
+            const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/orders/track/${orderId}`);
             setOrderStatus(data);
         } catch (error) {
             message.error('Order not found.');

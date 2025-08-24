@@ -19,7 +19,8 @@ const AdminDashboard = () => {
     const fetchProducts = async () => {
         setLoading(true);
         try {
-            const { data } = await axios.get('http://localhost:5000/products');
+            const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/products`);
+
             setProducts(data);
         } catch (error) {
             message.error('Failed to fetch products');
@@ -34,7 +35,7 @@ const AdminDashboard = () => {
 
     const handleDelete = async (id) => {
         try {
-            await axios.delete(`http://localhost:5000/products/${id}`, {
+            await axios.delete(`${process.env.REACT_APP_API_URL}/products/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             message.success('Product deleted successfully');
@@ -48,10 +49,10 @@ const AdminDashboard = () => {
         const config = { headers: { Authorization: `Bearer ${token}` } };
         try {
             if (editingProduct) {
-                await axios.put(`http://localhost:5000/products/${editingProduct._id}`, values, config);
+                await axios.put(`${process.env.REACT_APP_API_URL}/products/${editingProduct._id}`, values, config);
                 message.success('Product updated successfully');
             } else {
-                await axios.post('http://localhost:5000/products', values, config);
+                await axios.post(`${process.env.REACT_APP_API_URL}/products`, values, config);
                 message.success('Product added successfully');
             }
             setIsModalVisible(false);

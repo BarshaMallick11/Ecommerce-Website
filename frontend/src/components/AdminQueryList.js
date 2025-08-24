@@ -17,7 +17,7 @@ const AdminQueryList = () => {
         setLoading(true);
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            const { data } = await axios.get('http://localhost:5000/api/queries', config);
+            const { data } = await axios.get('${process.env.REACT_APP_API_URL}/api/queries', config);
             setQueries(data);
         } catch (error) {
             message.error('Failed to fetch queries');
@@ -33,7 +33,7 @@ const AdminQueryList = () => {
     const handleResolve = async (id) => {
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            await axios.put(`http://localhost:5000/api/queries/${id}/resolve`, {}, config);
+            await axios.put(`${process.env.REACT_APP_API_URL}/api/queries/${id}/resolve`, {}, config);
             message.success('Query marked as resolved');
             fetchQueries();
         } catch (error) {

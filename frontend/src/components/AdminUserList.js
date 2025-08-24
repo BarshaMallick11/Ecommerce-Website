@@ -18,7 +18,7 @@ const AdminUserList = () => {
         setLoading(true);
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            const { data } = await axios.get('http://localhost:5000/api/users', config);
+            const { data } = await axios.get('${process.env.REACT_APP_API_URL}/api/users', config);
             setUsers(data);
         } catch (error) {
             message.error('Failed to fetch users');
@@ -36,7 +36,7 @@ const AdminUserList = () => {
     const handleMakeAdmin = async (id) => {
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            await axios.put(`http://localhost:5000/api/users/${id}/make-admin`, {}, config);
+            await axios.put(`${process.env.REACT_APP_API_URL}/api/users/${id}/make-admin`, {}, config);
             message.success('User is now an admin');
             fetchUsers();
         } catch (error) {
@@ -51,7 +51,7 @@ const AdminUserList = () => {
         }
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            await axios.delete(`http://localhost:5000/api/users/${id}`, config);
+            await axios.delete(`${process.env.REACT_APP_API_URL}/api/users/${id}`, config);
             message.success('User deleted successfully');
             fetchUsers();
         } catch (error) {

@@ -15,7 +15,7 @@ const ResetPasswordPage = () => {
             return message.error("Passwords do not match!");
         }
         try {
-            const { data } = await axios.post(`http://localhost:5000/api/auth/reset-password/${token}`, { password: values.password });
+            const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/reset-password/${token}`, { password: values.password });
             message.success(data.message);
             navigate('/login');
         } catch (err) {

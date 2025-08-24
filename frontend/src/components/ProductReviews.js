@@ -16,7 +16,7 @@ const ProductReviews = ({ product, fetchProduct }) => {
         setLoading(true);
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            await axios.post(`http://localhost:5000/products/${product._id}/reviews`, values, config);
+            await axios.post(`${process.env.REACT_APP_API_URL}/products/${product._id}/reviews`, values, config);
             message.success('Review submitted successfully!');
             form.resetFields();
             fetchProduct(); // Re-fetch product to show the new review

@@ -26,7 +26,7 @@ const ProfileDetails = ({ user, token, onProfileUpdate }) => {
     const onFinish = async (values) => {
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            const { data } = await axios.put('http://localhost:5000/api/profile', values, config);
+            const { data } = await axios.put('${process.env.REACT_APP_API_URL}/api/profile', values, config);
             message.success('Profile updated successfully!');
             onProfileUpdate(data); // Update the global user state
         } catch (error) {
@@ -128,7 +128,7 @@ const ProfilePage = () => {
         if (!token) return;
         const config = { headers: { Authorization: `Bearer ${token}` } };
         try {
-            const { data } = await axios.get('http://localhost:5000/api/profile', config);
+            const { data } = await axios.get('${process.env.REACT_APP_API_URL}/api/profile', config);
             setAddresses(data.shippingAddresses);
         } catch (error) {
             message.error('Could not fetch addresses.');
@@ -149,10 +149,10 @@ const ProfilePage = () => {
         try {
             let response;
             if (editingAddress) {
-                response = await axios.put(`http://localhost:5000/api/profile/address/${editingAddress._id}`, values, config);
+                response = await axios.put(`${process.env.REACT_APP_API_URL}/api/profile/address/${editingAddress._id}`, values, config);
                 message.success('Address updated successfully!');
             } else {
-                response = await axios.post('http://localhost:5000/api/profile/address', values, config);
+                response = await axios.post(`${process.env.REACT_APP_API_URL}/api/profile/address`, values, config);
                 message.success('Address added successfully!');
             }
             setAddresses(response.data);
@@ -166,7 +166,7 @@ const ProfilePage = () => {
     const handleDeleteAddress = async (id) => {
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            const { data } = await axios.delete(`http://localhost:5000/api/profile/address/${id}`, config);
+            const { data } = await axios.delete(`${process.env.REACT_APP_API_URL}/api/profile/address/${id}`, config);
             setAddresses(data);
             message.success('Address deleted successfully!');
         } catch (error) {
