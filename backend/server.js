@@ -8,7 +8,15 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors());
+// --- THIS IS THE FIX: Configure CORS for your live frontend ---
+const corsOptions = {
+    origin: 'https://premiumstore-delta.vercel.app/', // Replace with your actual Vercel URL
+    optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+// --- End of Fix ---
+
+//app.use(cors());
 app.use(express.json());
 
 const uri = process.env.ATLAS_URI;
