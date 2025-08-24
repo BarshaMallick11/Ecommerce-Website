@@ -10,7 +10,7 @@ const { Title } = Typography;
 const ForgotPasswordPage = () => {
     const onFinish = async (values) => {
         try {
-            const { data } = await axios.post('${process.env.REACT_APP_API_URL}/api/auth/forgot-password', values);
+            const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/forgot-password`, values);
             message.success(data.message);
         } catch (err) {
             message.error('An error occurred. Please try again.');

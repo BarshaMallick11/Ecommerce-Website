@@ -16,7 +16,7 @@ const AdminSettings = () => {
         const fetchSettings = async () => {
             setLoading(true);
             try {
-                const { data } = await axios.get('${process.env.REACT_APP_API_URL}/api/settings');
+                const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/settings`);
                 form.setFieldsValue({ 
                     contactPhone: data.contactPhone,
                     contactEmail: data.contactEmail
@@ -33,7 +33,7 @@ const AdminSettings = () => {
     const onFinish = async (values) => {
         const config = { headers: { Authorization: `Bearer ${token}` } };
         try {
-            await axios.put('${process.env.REACT_APP_API_URL}/api/settings', values, config);
+            await axios.put(`${process.env.REACT_APP_API_URL}/api/settings`, values, config);
             message.success('Settings updated!');
         } catch (error) {
             message.error('Failed to update settings.');

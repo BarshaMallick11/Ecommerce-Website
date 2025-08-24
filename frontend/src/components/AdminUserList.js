@@ -18,7 +18,7 @@ const AdminUserList = () => {
         setLoading(true);
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            const { data } = await axios.get('${process.env.REACT_APP_API_URL}/api/users', config);
+            const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/users`, config);
             setUsers(data);
         } catch (error) {
             message.error('Failed to fetch users');

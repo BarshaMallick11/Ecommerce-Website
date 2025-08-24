@@ -14,7 +14,7 @@ const LoginPage = () => {
 
     const onFinish = async (values) => {
         try {
-            const res = await axios.post('${process.env.REACT_APP_API_URL}/api/auth/login', values);
+            const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/login`, values);
             login(res.data.token, res.data.user);
             message.success('Login successful!');
             navigate('/');

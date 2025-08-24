@@ -17,7 +17,7 @@ const HelpPage = () => {
 
     useEffect(() => {
         const fetchSettings = async () => {
-            const { data } = await axios.get('${process.env.REACT_APP_API_URL}/api/settings');
+            const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/settings`);
             setPhone(data.contactPhone);
             setEmail(data.contactEmail); // Correctly set the email
         };
@@ -29,7 +29,7 @@ const HelpPage = () => {
 
     const onFinish = async (values) => {
         try {
-            const { data } = await axios.post('${process.env.REACT_APP_API_URL}/api/queries', values);
+            const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/api/queries`, values);
             message.success(data.message);
             form.resetFields(['orderId', 'message']);
         } catch (error) {

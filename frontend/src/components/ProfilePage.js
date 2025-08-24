@@ -26,7 +26,7 @@ const ProfileDetails = ({ user, token, onProfileUpdate }) => {
     const onFinish = async (values) => {
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            const { data } = await axios.put('${process.env.REACT_APP_API_URL}/api/profile', values, config);
+            const { data } = await axios.put(`${process.env.REACT_APP_API_URL}/api/profile`, values, config);
             message.success('Profile updated successfully!');
             onProfileUpdate(data); // Update the global user state
         } catch (error) {
@@ -128,7 +128,7 @@ const ProfilePage = () => {
         if (!token) return;
         const config = { headers: { Authorization: `Bearer ${token}` } };
         try {
-            const { data } = await axios.get('${process.env.REACT_APP_API_URL}/api/profile', config);
+            const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/profile`, config);
             setAddresses(data.shippingAddresses);
         } catch (error) {
             message.error('Could not fetch addresses.');
