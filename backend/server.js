@@ -8,13 +8,7 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors({
-  origin: ["https://premiumstore1.vercel.app/"], // your new frontend domain
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-}));
-
-
+app.use(cors());
 app.use(express.json());
 
 const uri = process.env.ATLAS_URI;
@@ -35,6 +29,8 @@ const profileRouter = require('./routes/profile');
 const contactRouter = require('./routes/contact');
 const settingsRouter = require('./routes/settings'); // Add
 const queriesRouter = require('./routes/queries');
+const shippingRouter = require('./routes/shipping');
+const pincodesRouter = require('./routes/pincodes');
 
 app.use('/products', productsRouter);
 app.use('/api/auth', authRouter);
@@ -46,7 +42,8 @@ app.use('/api/contact', contactRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/settings', settingsRouter); // Add
 app.use('/api/queries', queriesRouter);
-
+app.use('/api/shipping', shippingRouter);
+app.use('/api/pincodes', pincodesRouter);
 app.listen(port, () => {
     console.log(`Server is running on port: ${port}`);
 });

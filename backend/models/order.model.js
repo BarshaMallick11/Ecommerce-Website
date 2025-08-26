@@ -9,9 +9,9 @@ const orderSchema = new Schema({
         quantity: { type: Number, required: true }
     }],
     totalAmount: { type: Number, required: true },
-    paymentId: { type: String, required: true },
-    //isDelivered: { type: Boolean, default: false },
-    shippingAddress: { // Add this object
+    paymentId: { type: String },
+    paymentMethod: { type: String, required: true, enum: ['Razorpay', 'COD'], default: 'Razorpay' },
+    shippingAddress: {
         address: { type: String, required: true },
         city: { type: String, required: true },
         postalCode: { type: String, required: true },
@@ -21,10 +21,14 @@ const orderSchema = new Schema({
     status: { 
         type: String, 
         required: true, 
-        enum: ['Processing', 'Shipped', 'Delivered'], 
+        enum: ['Processing', 'Shipped', 'Delivered', 'Cancelled'], 
         default: 'Processing' 
     },
     trackingNumber: { type: String, default: '' },
+    estimatedDeliveryDate: { type: Date },
+    shippedAt: { type: Date },
+    deliveredAt: { type: Date },
+    cancelledAt: { type: Date },
 }, {
     timestamps: true,
 });

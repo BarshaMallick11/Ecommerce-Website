@@ -9,7 +9,7 @@ import { Row, Col, Spin, Typography, Button, Image, Rate, Divider } from 'antd';
 import { ShoppingCartOutlined } from '@ant-design/icons';
 import ProductReviews from './ProductReviews'; // Import the new component
 import { useCart } from '../context/CartContext';
-
+import { useAuth } from '../context/AuthContext';
 const { Title, Paragraph, Text } = Typography;
 
 const ProductPage = () => {
@@ -17,6 +17,7 @@ const ProductPage = () => {
     const [loading, setLoading] = useState(true);
     const { id } = useParams();
     const { addToCart } = useCart();
+    const { user } = useAuth();
 
     const fetchProduct = useCallback(async () => {
         setLoading(true);
@@ -59,9 +60,11 @@ const ProductPage = () => {
                     <Paragraph style={{ marginTop: '10px' }}>{product.description}</Paragraph>
                     <Text strong style={{ fontSize: '24px' }}>₹{product.price.toFixed(2)}</Text>
                     <div style={{ marginTop: '24px' }}>
+                        {!user?.isAdmin && (
                         <Button type="primary" size="large" icon={<ShoppingCartOutlined />} onClick={() => addToCart(product)}>
                             Add to Cart
                         </Button>
+                        )}
                     </div>
                 </Col>
             </Row>

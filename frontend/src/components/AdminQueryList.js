@@ -17,7 +17,7 @@ const AdminQueryList = () => {
         setLoading(true);
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            const { data } = await axios.get('${process.env.REACT_APP_API_URL}/api/queries', config);
+            const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/queries`, config);
             setQueries(data);
         } catch (error) {
             message.error('Failed to fetch queries');

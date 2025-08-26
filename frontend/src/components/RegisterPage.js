@@ -16,7 +16,9 @@ const RegisterPage = () => {
             message.success('Registration successful! Please log in.');
             navigate('/login');
         } catch (err) {
-            message.error(err.response.data.msg || 'Registration failed!');
+            // THIS IS THE FIX: Check if err.response exists
+            const errorMessage = err.response ? err.response.data.msg : 'Registration failed! Cannot connect to server.';
+            message.error(errorMessage);
         }
     };
 

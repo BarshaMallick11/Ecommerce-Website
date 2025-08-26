@@ -1,11 +1,11 @@
 // frontend/src/components/AdminDashboard.js
-
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Space, Typography, message, Popconfirm } from 'antd';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import ProductEditModal from './ProductEditModal';
-import AdminNav from './AdminNav'; // <-- IMPORT THE NEW COMPONENT
+import AdminNav from './AdminNav';
 
 const { Title } = Typography;
 
@@ -20,7 +20,6 @@ const AdminDashboard = () => {
         setLoading(true);
         try {
             const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/products`);
-
             setProducts(data);
         } catch (error) {
             message.error('Failed to fetch products');
@@ -83,29 +82,31 @@ const AdminDashboard = () => {
     return (
         <div>
             <Title level={2}>Admin Dashboard</Title>
-            <AdminNav /> {/* <-- USE THE NEW COMPONENT */}
+            <AdminNav />
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <Title level={4} style={{ margin: 0 }}>All Products</Title>
-                <Button type="primary" onClick={() => { setEditingProduct(null); setIsModalVisible(true); }}>
-                    Add Product
-                </Button>
+            <div style={{ marginTop: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                    <Title level={4} style={{ margin: 0 }}>All Products</Title>
+                    <Button type="primary" onClick={() => { setEditingProduct(null); setIsModalVisible(true); }}>
+                        Add Product
+                    </Button>
+                </div>
+
+                <Table
+                    columns={columns}
+                    dataSource={products}
+                    rowKey="_id"
+                    loading={loading}
+                    scroll={{ x: true }}
+                />
+
+                <ProductEditModal
+                    visible={isModalVisible}
+                    onCancel={() => { setIsModalVisible(false); setEditingProduct(null); }}
+                    onFinish={handleModalFinish}
+                    initialValues={editingProduct}
+                />
             </div>
-
-            <Table
-                columns={columns}
-                dataSource={products}
-                rowKey="_id"
-                loading={loading}
-                scroll={{ x: true }}
-            />
-
-            <ProductEditModal
-                visible={isModalVisible}
-                onCancel={() => { setIsModalVisible(false); setEditingProduct(null); }}
-                onFinish={handleModalFinish}
-                initialValues={editingProduct}
-            />
         </div>
     );
 };

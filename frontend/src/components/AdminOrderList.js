@@ -1,11 +1,11 @@
 // frontend/src/components/AdminOrderList.js
-
 import React, { useState, useEffect, useCallback } from 'react';
-import { List, Card, Button, Typography, message, Tag, Modal, Form, Input, Select, Spin } from 'antd';
+import { List, Card, Button, Typography, message, Tag, Modal, Form, Input, Select, Spin, Tooltip, Divider, DatePicker, Popconfirm} from 'antd'; // Import Tooltip
+import { DeleteOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import moment from 'moment';
-import AdminNav from './AdminNav'; // <-- IMPORT THE NEW COMPONENT
+import AdminNav from './AdminNav';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -46,10 +46,24 @@ const AdminOrderList = () => {
             message.error('Failed to update order status');
         }
     };
+    const handleDelete = async (id) => {
+        try {
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            await axios.delete(`${process.env.REACT_APP_API_URL}/api/orders/${id}`, config);
+            message.success('Order deleted successfully');
+            fetchOrders(); // Refresh the list
+        } catch (error) {
+            message.error('Failed to delete order');
+        }
+    };
 
     const showUpdateModal = (order) => {
         setCurrentOrder(order);
-        form.setFieldsValue({ status: order.status, trackingNumber: order.trackingNumber });
+        form.setFieldsValue({ 
+            status: order.status, 
+            trackingNumber: order.trackingNumber,
+            estimatedDeliveryDate: order.estimatedDeliveryDate ? moment(order.estimatedDeliveryDate) : null
+        });
         setIsModalVisible(true);
     };
 
@@ -57,15 +71,16 @@ const AdminOrderList = () => {
         let color = 'geekblue';
         if (status === 'Shipped') color = 'orange';
         if (status === 'Delivered') color = 'green';
+         if (status === 'Cancelled') color = 'red';
         return <Tag color={color}>{status ? status.toUpperCase() : 'N/A'}</Tag>;
     };
 
     return (
         <div>
             <Title level={2}>Admin Dashboard</Title>
-            <AdminNav /> {/* <-- USE THE NEW COMPONENT */}
+            <AdminNav />
 
-            <Title level={4}>All Customer Orders</Title>
+            <Title level={4} style={{ marginTop: 24 }}>All Customer Orders</Title>
 
             {loading && orders.length === 0 ? <div style={{textAlign: 'center', marginTop: 50}}><Spin size="large"/></div> : (
                 <List
@@ -73,13 +88,31 @@ const AdminOrderList = () => {
                     dataSource={orders}
                     renderItem={(order) => (
                         <List.Item>
-                            <Card title={`Order: ...${order._id.substring(order._id.length - 6)}`}>
+                            <Card 
+                                title={
+                                    <Tooltip title={order._id}>
+                                        <span>{`Order: ...${order._id.substring(order._id.length - 6)}`}</span>
+                                    </Tooltip>
+                                }
+                                extra={
+                                    <Popconfirm title="Are you sure you want to delete this order?" onConfirm={() => handleDelete(order._id)}>
+                                        <Button shape="circle" danger icon={<DeleteOutlined />} />
+                                    </Popconfirm>
+                                }
+                            >
                                 <p><Text strong>User:</Text> {order.user ? order.user.username : 'N/A'}</p>
                                 <p><Text strong>Date:</Text> {moment(order.createdAt).format('YYYY-MM-DD')}</p>
                                 <p><Text strong>Total:</Text> ₹{order.totalAmount.toFixed(2)}</p>
                                 <p><Text strong>Status:</Text> <StatusTag status={order.status} /></p>
                                 {order.trackingNumber && <p><Text strong>Tracking #:</Text> {order.trackingNumber}</p>}
-                                <Button type="primary" style={{ width: '100%', marginTop: 16 }} onClick={() => showUpdateModal(order)}>
+                                {order.estimatedDeliveryDate && <p><Text strong>Est. Delivery:</Text> {moment(order.estimatedDeliveryDate).format('YYYY-MM-DD')}</p>}
+
+                                <Divider style={{ margin: '12px 0' }} />
+                                <p><Text strong>Shipping Address:</Text></p>
+                                <Text>{order.shippingAddress.address}, {order.shippingAddress.city}, {order.shippingAddress.postalCode}</Text><br/>
+                                <Text>{order.shippingAddress.country}</Text><br/>
+                                <Text>Phone: {order.shippingAddress.phoneNo}</Text>
+                                <Button type="primary" style={{ width: '100%', marginTop: 16 }} onClick={() => showUpdateModal(order)} disabled={order.status === 'Delivered'}>
                                     Update Status
                                 </Button>
                             </Card>
@@ -93,7 +126,7 @@ const AdminOrderList = () => {
                 open={isModalVisible}
                 onCancel={() => setIsModalVisible(false)}
                 onOk={() => form.submit()}
-                destroyOnClose
+                destroyOnHidden
             >
                 <Form form={form} layout="vertical" onFinish={handleUpdateStatus}>
                     <Form.Item name="status" label="Status">
@@ -101,10 +134,14 @@ const AdminOrderList = () => {
                             <Option value="Processing">Processing</Option>
                             <Option value="Shipped">Shipped</Option>
                             <Option value="Delivered">Delivered</Option>
+                            <Option value="Cancelled">Cancelled</Option>
                         </Select>
                     </Form.Item>
                     <Form.Item name="trackingNumber" label="Tracking Number">
                         <Input placeholder="Enter tracking number" />
+                    </Form.Item>
+                    <Form.Item name="estimatedDeliveryDate" label="Estimated Delivery Date">
+                        <DatePicker style={{ width: '100%' }} />
                     </Form.Item>
                 </Form>
             </Modal>

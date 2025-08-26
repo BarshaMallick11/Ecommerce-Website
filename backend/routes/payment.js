@@ -4,6 +4,7 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const Order = require('../models/order.model');
 const jwt = require('jsonwebtoken');
+const { protect } = require('../middleware/authMiddleware');
 
 const instance = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
@@ -17,7 +18,7 @@ router.post('/create-order', async (req, res) => {
         items.forEach(item => {
             total += item.price * item.quantity;
         });
-        return Math.round(total * 100); // Amount in the smallest currency unit (paise)
+        return Math.round(total * 100);
     };
 
     const options = {
@@ -51,6 +52,7 @@ router.post('/verify-payment', async (req, res) => {
                 totalAmount: totalAmount,
                 paymentId: razorpay_payment_id,
                 shippingAddress: shippingAddress,
+                paymentMethod: 'Razorpay'
             });
 
             await newOrder.save();
@@ -60,6 +62,29 @@ router.post('/verify-payment', async (req, res) => {
         }
     } else {
         res.status(400).json({ status: 'failure', message: 'Invalid signature.' });
+    }
+});
+
+// @desc   Place a Cash on Delivery order
+// @route  POST /api/payment/cod-order
+// @access Private
+router.post('/cod-order', protect, async (req, res) => {
+    const { cartItems, totalAmount, shippingAddress } = req.body;
+
+    try {
+        const newOrder = new Order({
+            user: req.user._id,
+            products: cartItems.map(item => ({ product: item, quantity: item.quantity })),
+            totalAmount: totalAmount,
+            paymentMethod: 'COD',
+            shippingAddress: shippingAddress,
+            paymentId: `COD-${Date.now()}`,
+        });
+
+        const savedOrder = await newOrder.save();
+        res.status(201).json({ status: 'success', orderId: savedOrder._id });
+    } catch (error) {
+        res.status(500).json({ status: 'failure', message: 'Could not place order.' });
     }
 });
 

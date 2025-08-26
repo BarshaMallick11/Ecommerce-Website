@@ -30,7 +30,9 @@ const ProfileDetails = ({ user, token, onProfileUpdate }) => {
             message.success('Profile updated successfully!');
             onProfileUpdate(data); // Update the global user state
         } catch (error) {
-            message.error('Failed to update profile.');
+            // THIS IS THE FIX: Check if error.response exists
+            const errorMessage = error.response ? error.response.data.message : 'Failed to update profile. Cannot connect to server.';
+            message.error(errorMessage);
         }
     };
 
@@ -190,6 +192,7 @@ const ProfilePage = () => {
                 <TabPane tab="Profile Details" key="1">
                     <ProfileDetails user={user} token={token} onProfileUpdate={handleProfileUpdate} />
                 </TabPane>
+                {!user?.isAdmin && (
                 <TabPane tab="Shipping Addresses" key="2">
                     <ShippingAddresses 
                         addresses={addresses}
@@ -198,6 +201,7 @@ const ProfilePage = () => {
                         onDelete={handleDeleteAddress}
                     />
                 </TabPane>
+                )}
             </Tabs>
 
             <AddressModal

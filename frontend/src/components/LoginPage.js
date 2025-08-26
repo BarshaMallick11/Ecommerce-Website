@@ -19,7 +19,9 @@ const LoginPage = () => {
             message.success('Login successful!');
             navigate('/');
         } catch (err) {
-            message.error(err.response.data.msg || 'Login failed!');
+            // THIS IS THE FIX: Check if err.response exists
+            const errorMessage = err.response ? err.response.data.msg : 'Login failed! Cannot connect to server.';
+            message.error(errorMessage);
         }
     };
 

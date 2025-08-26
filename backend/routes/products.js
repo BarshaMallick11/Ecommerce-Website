@@ -1,4 +1,8 @@
 // backend/routes/products.js
+// This is the complete and final version of this file.
+// Please replace the entire contents of your local products.js file with this code
+// to ensure there are no conflicting or duplicate routes.
+
 const router = require('express').Router();
 const Product = require('../models/product.model');
 const { protect, admin } = require('../middleware/authMiddleware');
@@ -48,6 +52,44 @@ router.get('/', async (req, res) => {
         res.status(500).json({ message: 'Server Error' });
     }
 });
+
+// @desc   Get product name suggestions for autocomplete
+// @route  GET /products/autocomplete
+// @access Public
+router.get('/autocomplete', async (req, res) => {
+    try {
+        const query = req.query.query;
+        if (!query) {
+            return res.json([]);
+        }
+
+        const suggestions = await Product.aggregate([
+            {
+                $search: {
+                    index: 'autocomplete', // Use the new autocomplete index
+                    autocomplete: {
+                        query: query,
+                        path: 'name',
+                        tokenOrder: 'sequential'
+                    }
+                }
+            },
+            {
+                $limit: 10 // Limit to 10 suggestions
+            },
+            {
+                $project: {
+                    _id: 0,
+                    name: 1
+                }
+            }
+        ]);
+        res.json(suggestions.map(s => ({ value: s.name }))); // Format for Ant Design
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
 
 // @desc   Fetch single product
 // @route  GET /products/:id
@@ -151,43 +193,6 @@ router.post('/:id/reviews', protect, async (req, res) => {
         } else {
             res.status(404).json({ message: 'Product not found' });
         }
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error' });
-    }
-});
-
-// @desc   Get product name suggestions for autocomplete
-// @route  GET /products/autocomplete
-// @access Public
-router.get('/autocomplete', async (req, res) => {
-    try {
-        const query = req.query.query;
-        if (!query) {
-            return res.json([]);
-        }
-
-        const suggestions = await Product.aggregate([
-            {
-                $search: {
-                    index: 'autocomplete', // Use the new autocomplete index
-                    autocomplete: {
-                        query: query,
-                        path: 'name',
-                        tokenOrder: 'sequential'
-                    }
-                }
-            },
-            {
-                $limit: 10 // Limit to 10 suggestions
-            },
-            {
-                $project: {
-                    _id: 0,
-                    name: 1
-                }
-            }
-        ]);
-        res.json(suggestions.map(s => ({ value: s.name }))); // Format for Ant Design
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });
     }

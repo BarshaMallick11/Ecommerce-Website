@@ -17,6 +17,7 @@ const AdminNav = () => {
         if (path.includes('/admin/users')) return '/admin/users';
         if (path.includes('/admin/queries')) return '/admin/queries';
         if (path.includes('/admin/settings')) return '/admin/settings';
+        if (path.includes('/admin/pincodes')) return '/admin/pincodes';
         return '/admin';
     };
 
@@ -36,6 +37,7 @@ const AdminNav = () => {
                 <TabPane tab="User Management" key="/admin/users" />
                 <TabPane tab="Customer Queries" key="/admin/queries" />
                 <TabPane tab="Site Settings" key="/admin/settings" />
+                <TabPane tab="Manage Pincodes" key="/admin/pincodes" />
             </Tabs>
 
             <Button

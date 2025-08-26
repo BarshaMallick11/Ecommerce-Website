@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import BackButton from './BackButton';
 import { Input, Card, Typography, message, Steps } from 'antd';
 import axios from 'axios';
+import moment from 'moment';
 
 const { Title } = Typography;
 const { Step } = Steps;
@@ -57,6 +58,11 @@ const TrackOrderPage = () => {
                         <Step title="Shipped" />
                         <Step title="Delivered" />
                     </Steps>
+                     {orderStatus.estimatedDeliveryDate && (
+                         <p style={{ marginTop: 16, textAlign: 'center' }}>
+                            Estimated Delivery: <strong>{moment(orderStatus.estimatedDeliveryDate).format('MMMM Do, YYYY')}</strong>
+                        </p>
+                    )}
                     {orderStatus.status === 'Shipped' && orderStatus.trackingNumber && (
                         <p style={{ marginTop: 16 }}>
                             Tracking Number: <strong>{orderStatus.trackingNumber}</strong>

@@ -55,9 +55,11 @@ const ProductReviews = ({ product, fetchProduct }) => {
                             <TextArea rows={4} />
                         </Form.Item>
                         <Form.Item>
+                            {!user?.isAdmin && (
                             <Button htmlType="submit" loading={loading} type="primary">
                                 Submit Review
                             </Button>
+                            )}
                         </Form.Item>
                     </Form>
                 </div>

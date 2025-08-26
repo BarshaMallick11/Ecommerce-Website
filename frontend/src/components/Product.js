@@ -54,6 +54,7 @@ const Product = ({ product }) => {
                 title={<Link to={`/product/${product._id}`} className="product-title-link">{product.name}</Link>}
                 description={<Text strong>₹{product.price.toFixed(2)}</Text>}
             />
+            {!user?.isAdmin && (
             <Button
                 className="add-to-cart-btn"
                 type="primary"
@@ -62,6 +63,7 @@ const Product = ({ product }) => {
             >
                 Add to Cart
             </Button>
+            )}
         </Card>
     );
 };

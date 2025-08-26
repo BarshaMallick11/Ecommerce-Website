@@ -30,6 +30,7 @@ import AdminQueryList from './components/AdminQueryList';
 import AdminSettings from './components/AdminSettings';
 import ForgotPasswordPage from './components/ForgotPasswordPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
+import AdminPincodeManager from './components/AdminPincodeManager';
 const { Header, Content, Footer } = Layout;
 const { Title } = Typography;
 
@@ -42,10 +43,14 @@ const AppHeader = () => {
 
     const desktopMenuItems = [
         { key: '1', label: <Link to="/profile">My Profile</Link> },
-        { key: '2', label: <Link to="/orders">Order History</Link> },
-        { key: '3', label: <Link to="/track-order">Track Order</Link> },
-        { key: '4', label: <Link to="/help">Help & Contact</Link> },
-        ...(user && user.isAdmin ? [{ key: '5', label: <Link to="/admin">Admin Panel</Link> }] : []),
+        // Conditionally add items for non-admins
+        ...(!user?.isAdmin ? [
+            { key: '2', label: <Link to="/orders">Order History</Link> },
+            { key: '3', label: <Link to="/track-order">Track Order</Link> },
+        ] : []),
+        // Conditionally add item for admins
+        ...(user?.isAdmin ? [{ key: '4', label: <Link to="/admin">Admin Panel</Link> }] : []),
+        { key: '5', label: <Link to="/help">Help & Contact</Link> },
         { key: '6', label: <div onClick={logout}>Logout</div> },
     ];
 
@@ -56,12 +61,12 @@ const AppHeader = () => {
                 <Menu mode="inline" onClick={closeDrawer}>
                     <Menu.Item key="welcome" style={{ color: '#4f772d', fontWeight: 'bold' }}>Welcome, {user.username}</Menu.Item>
                     <Menu.Divider />
-                    <Menu.Item key="profile"><Link to="/">Home</Link></Menu.Item>
+                    <Menu.Item key="home"><Link to="/">Home</Link></Menu.Item>
                     <Menu.Item key="profile"><Link to="/profile">My Profile</Link></Menu.Item>
-                    <Menu.Item key="orders"><Link to="/orders">Order History</Link></Menu.Item>
-                    <Menu.Item key="track"><Link to="/track-order">Track Order</Link></Menu.Item>
+                    {!user.isAdmin && <Menu.Item key="orders"><Link to="/orders">Order History</Link></Menu.Item>}
                     {user.isAdmin && <Menu.Item key="admin"><Link to="/admin">Admin Panel</Link></Menu.Item>}
                     <Menu.Item key="help"><Link to="/help">Help & Contact</Link></Menu.Item>
+                    {!user.isAdmin && <Menu.Item key="track"><Link to="/track-order">Track Order</Link></Menu.Item>}
                     <Menu.Item key="logout" onClick={logout}>Logout</Menu.Item>
                 </Menu>
             );
@@ -101,13 +106,13 @@ const AppHeader = () => {
                             <Button type="primary">Login</Button>
                         </Link>
                     )}
-                    <CartIcon />
+                    {!user?.isAdmin && <CartIcon />}
                 </Space>
             </div>
             
             <div className="mobile-menu-icon">
               <Space size="middle" align='center'>
-                <CartIcon />
+                {!user?.isAdmin && <CartIcon />}
                 <Button type="primary" onClick={showDrawer} icon={<MenuOutlined />} />
               </Space>
             </div>
@@ -116,7 +121,6 @@ const AppHeader = () => {
                 <div style={{ marginBottom: '20px' }}>
                     <SearchBox onSearchCallback={closeDrawer}/>
                 </div>
-                <Divider />
                 <MobileNavMenu />
             </Drawer>
         </Header>
@@ -175,6 +179,7 @@ function App() {
                           <Route path="users" element={<AdminUserList />} />
                           <Route path="queries" element={<AdminQueryList />} />
                           <Route path="settings" element={<AdminSettings />} />
+                          <Route path="pincodes" element={<AdminPincodeManager />} />
                       </Route>
                     </Routes>
                   </div>
