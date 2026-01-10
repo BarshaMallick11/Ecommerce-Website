@@ -1,20 +1,21 @@
 // frontend/src/components/ProductPage.js
 
-// frontend/src/components/ProductPage.js
-import React, { useState, useEffect, useCallback } from 'react'; // Add useCallback
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import BackButton from './BackButton';
-import { Row, Col, Spin, Typography, Button, Image, Rate, Divider } from 'antd'; // Add Rate and Divider
-import { ShoppingCartOutlined } from '@ant-design/icons';
-import ProductReviews from './ProductReviews'; // Import the new component
+import { Row, Col, Spin, Typography, Button, Image, Rate, Tag, Space, Card } from 'antd';
+import { ShoppingCartOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
+import ProductReviews from './ProductReviews';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+
 const { Title, Paragraph, Text } = Typography;
 
 const ProductPage = () => {
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [quantity, setQuantity] = useState(1);
     const { id } = useParams();
     const { addToCart } = useCart();
     const { user } = useAuth();
@@ -35,6 +36,24 @@ const ProductPage = () => {
         fetchProduct();
     }, [fetchProduct]);
 
+    const increaseQuantity = () => {
+        setQuantity(prev => prev + 1);
+    };
+
+    const decreaseQuantity = () => {
+        if (quantity > 1) {
+            setQuantity(prev => prev - 1);
+        }
+    };
+
+    const handleAddToCart = () => {
+        if (user) {
+            for (let i = 0; i < quantity; i++) {
+                addToCart(product);
+            }
+        }
+    };
+
     if (loading) {
         return <div style={{ textAlign: 'center', padding: '50px' }}><Spin size="large" /></div>;
     }
@@ -46,34 +65,182 @@ const ProductPage = () => {
     return (
         <div>
             <BackButton />
-            <Row gutter={[32, 32]} style={{ padding: '24px' }}>
-                <Col xs={24} md={12}>
-                    <Image
-                        width="100%"
-                        src={product.image || 'https://placehold.co/600x600/EEE/31343C?text=No+Image'}
-                        alt={product.name}
-                    />
-                </Col>
-                <Col xs={24} md={12}>
-                    <Title level={2}>{product.name}</Title>
-                    <Rate disabled value={product.rating} /> <Text>({product.numReviews} reviews)</Text>
-                    <Paragraph style={{ marginTop: '10px' }}>{product.description}</Paragraph>
-                    <Text strong style={{ fontSize: '24px' }}>₹{product.price.toFixed(2)}</Text>
-                    <div style={{ marginTop: '24px' }}>
-                        {!user?.isAdmin && (
-                        <Button type="primary" size="large" icon={<ShoppingCartOutlined />} onClick={() => addToCart(product)}>
-                            Add to Cart
-                        </Button>
-                        )}
-                    </div>
-                </Col>
-            </Row>
-            <Divider />
-            <Row style={{ padding: '24px' }}>
-                <Col span={24}>
-                    <ProductReviews product={product} fetchProduct={fetchProduct} />
-                </Col>
-            </Row>
+
+            {/* Main Product Section */}
+            <Card
+                style={{
+                    marginTop: '24px',
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    border: 'none',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                }}
+            >
+                <Row gutter={[48, 32]} style={{ rowGap: window.innerWidth <= 576 ? '16px' : '32px' }}>
+                    {/* Left Side - Product Image */}
+                    <Col xs={24} md={10}>
+                        <div className="product-detail-image" style={{
+                            backgroundColor: '#f5f5f5',
+                            borderRadius: '12px',
+                            overflow: 'hidden',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            height: '400px'
+                        }}>
+                            <Image
+                                width="100%"
+                                height="100%"
+                                style={{ objectFit: 'cover' }}
+                                src={product.image || 'https://placehold.co/600x600/EEE/31343C?text=No+Image'}
+                                alt={product.name}
+                                preview={false}
+                            />
+                        </div>
+
+                        {/* Thumbnail Images */}
+                        <div style={{
+                            display: 'flex',
+                            gap: '12px',
+                            marginTop: '16px',
+                            justifyContent: 'center'
+                        }}>
+                            {[1, 2, 3].map((_, index) => (
+                                <div
+                                    key={index}
+                                    className="product-thumbnail"
+                                    style={{
+                                        width: '80px',
+                                        height: '80px',
+                                        border: index === 0 ? '2px solid #52c41a' : '1px solid #e8e8e8',
+                                        borderRadius: '8px',
+                                        padding: '8px',
+                                        cursor: 'pointer',
+                                        backgroundColor: '#f5f5f5'
+                                    }}
+                                >
+                                    <img
+                                        src={product.image}
+                                        alt={`Thumbnail ${index + 1}`}
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'contain'
+                                        }}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </Col>
+
+                    {/* Right Side - Product Details */}
+                    <Col xs={24} md={14}>
+                        <div>
+
+
+                            {/* Product Name and Stock Badge */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <Title level={2} style={{ margin: 0 }}>{product.name}</Title>
+                                <Tag color="green" style={{ fontSize: '12px' }}>In Stock</Tag>
+                            </div>
+
+                            {/* Rating */}
+                            <div style={{ marginTop: '12px' }}>
+                                <Space>
+                                    <Rate disabled allowHalf value={product.rating || 0} style={{ fontSize: '16px' }} />
+                                    <Text type="secondary">({product.numReviews || 0} reviews)</Text>
+                                </Space>
+                            </div>
+
+                            {/* Price */}
+                            <div style={{ marginTop: '20px' }}>
+                                <Space align="baseline">
+                                    <Text strong className="product-detail-price" style={{ fontSize: '32px', color: '#262626' }}>
+                                        ₹{product.price.toFixed(2)}
+                                    </Text>
+                                    <Text delete type="secondary" style={{ fontSize: '20px' }}>
+                                        ₹{(product.price * 1.2).toFixed(2)}
+                                    </Text>
+                                </Space>
+                            </div>
+
+                            {/* Description */}
+                            <Paragraph style={{ marginTop: '16px', color: '#666', lineHeight: '1.8' }}>
+                                {product.description || 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'}
+                            </Paragraph>
+
+                            {/* Quantity and Add to Cart */}
+                            {!user?.isAdmin && (
+                                <div style={{ marginTop: '32px' }}>
+                                    <Space size={16}>
+                                        {/* Quantity Selector */}
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            border: '1px solid #e8e8e8',
+                                            borderRadius: '8px',
+                                            padding: '4px',
+                                            backgroundColor: 'white'
+                                        }}>
+                                            <Button
+                                                icon={<MinusOutlined />}
+                                                onClick={decreaseQuantity}
+                                                style={{
+                                                    border: 'none',
+                                                    width: '40px',
+                                                    height: '40px'
+                                                }}
+                                            />
+                                            <Text strong style={{
+                                                fontSize: '18px',
+                                                minWidth: '40px',
+                                                textAlign: 'center',
+                                                display: 'inline-block'
+                                            }}>
+                                                {quantity}
+                                            </Text>
+                                            <Button
+                                                icon={<PlusOutlined />}
+                                                onClick={increaseQuantity}
+                                                style={{
+                                                    border: 'none',
+                                                    width: '40px',
+                                                    height: '40px'
+                                                }}
+                                            />
+                                        </div>
+
+                                        {/* Add to Cart Button */}
+                                        <Button
+                                            type="primary"
+                                            size="large"
+                                            icon={<ShoppingCartOutlined />}
+                                            onClick={handleAddToCart}
+                                            style={{
+                                                height: '48px',
+                                                paddingLeft: '32px',
+                                                paddingRight: '32px',
+                                                borderRadius: '8px',
+                                                fontSize: '16px',
+                                                fontWeight: '500',
+                                                backgroundColor: '#52c41a',
+                                                border: 'none'
+                                            }}
+                                        >
+                                            Add to Cart
+                                        </Button>
+                                    </Space>
+                                </div>
+                            )}
+                        </div>
+                    </Col>
+                </Row>
+            </Card>
+
+            {/* Reviews Section */}
+            <div style={{ marginTop: '24px' }}>
+                <ProductReviews product={product} fetchProduct={fetchProduct} />
+            </div>
         </div>
     );
 };

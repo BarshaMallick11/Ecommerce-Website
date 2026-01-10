@@ -6,6 +6,8 @@
 const router = require('express').Router();
 const Product = require('../models/product.model');
 const { protect, admin } = require('../middleware/authMiddleware');
+const upload = require('../middleware/upload');
+const cloudinary = require('../config/cloudinary');
 
 // @desc   Fetch all products OR search products with smart matching
 // @route  GET /products
@@ -110,35 +112,82 @@ router.get('/:id', async (req, res) => {
 // @desc   Create a product
 // @route  POST /products
 // @access Private/Admin
-router.post('/', protect, admin, async (req, res) => {
-    const { name, price, description, image } = req.body;
-    const product = new Product({ name, price, description, image });
+router.post('/', protect, admin, upload.single("image"), async (req, res) => {
     try {
+        console.log('=== Product Creation Request ===');
+        console.log('Body:', req.body);
+        console.log('File:', req.file);
+
+        const { name, price, description } = req.body;
+
+        // Check if image file was uploaded
+        if (!req.file) {
+            console.log('No file uploaded');
+            return res.status(400).json({ message: 'Please upload an image' });
+        }
+
+        console.log('Uploading to Cloudinary...');
+        // Upload image to Cloudinary
+        const result = await cloudinary.uploader.upload(
+            `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
+            {
+                folder: 'ecommerce-products', // Optional: organize images in folders
+                resource_type: 'auto'
+            }
+        );
+        console.log('Cloudinary upload successful:', result.secure_url);
+
+        // Create product with Cloudinary image URL
+        const product = new Product({
+            name,
+            price,
+            description,
+            image: result.secure_url
+        });
+
         const createdProduct = await product.save();
+        console.log('Product created successfully:', createdProduct._id);
         res.status(201).json(createdProduct);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error('Error creating product:', error);
+        console.error('Error stack:', error.stack);
+        res.status(500).json({ message: error.message, error: error.toString() });
     }
 });
 
 // @desc   Update a product
 // @route  PUT /products/:id
 // @access Private/Admin
-router.put('/:id', protect, admin, async (req, res) => {
-    const { name, price, description, image } = req.body;
+router.put('/:id', protect, admin, upload.single("image"), async (req, res) => {
     try {
+        const { name, price, description } = req.body;
         const product = await Product.findById(req.params.id);
+
         if (product) {
             product.name = name;
             product.price = price;
             product.description = description;
-            product.image = image;
+
+            // If a new image was uploaded, update it
+            if (req.file) {
+                const result = await cloudinary.uploader.upload(
+                    `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
+                    {
+                        folder: 'ecommerce-products',
+                        resource_type: 'auto'
+                    }
+                );
+                product.image = result.secure_url;
+            }
+            // If no new image, keep the existing one
+
             const updatedProduct = await product.save();
             res.json(updatedProduct);
         } else {
             res.status(404).json({ message: 'Product not found' });
         }
     } catch (error) {
+        console.error('Error updating product:', error);
         res.status(400).json({ message: error.message });
     }
 });

@@ -9,7 +9,8 @@
 
 @media (max-width: 767px) {
   .site-content {
-    padding-left: 16px; /* A much more suitable padding for mobile */
+    padding-left: 16px;
+    /* A much more suitable padding for mobile */
     padding-right: 16px;
   }
 }
@@ -20,10 +21,12 @@
 }
 
 @media (max-width: 992px) {
+
   .header-search,
   .header-right-side {
     display: none;
   }
+
   .mobile-menu-icon {
     display: block;
   }
@@ -42,23 +45,192 @@
 
 /* --- Product Card Responsive Styles --- */
 .product-card-cover {
-  height: 200px;
+  height: 250px;
   overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: #f5f5f5;
+  border-radius: 12px 12px 0 0;
+  transition: transform 0.3s ease;
+  padding: 16px;
+  /* Add padding around images */
+}
+
+.product-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Crop and fill for uniform appearance */
+  transition: transform 0.3s ease;
+  border-radius: 12px;
+  /* Rounded corners for images */
+}
+
+.product-card-cover:hover img {
+  transform: scale(1.05);
+}
+
+/* Product Card Hover Effect */
+.ant-card-hoverable:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+  transform: translateY(-4px);
+  transition: all 0.3s ease;
+}
+
+.ant-card-hoverable {
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: visible !important;
+  /* Allow floating button to show */
+}
+
+.ant-card-cover {
+  overflow: visible !important;
+  /* Allow floating button to show */
+  border-radius: 16px 16px 0 0;
+}
+
+/* Quantity Selector Styles */
+.ant-input-number-sm {
+  border-radius: 6px !important;
+}
+
+.ant-input-number-sm input {
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Add to Cart Button */
+.add-to-cart-btn {
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.add-to-cart-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+}
+
+/* Desktop: Plus button inline with title */
+.product-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.plus-icon-wrapper {
+  flex-shrink: 0;
+  margin-left: 8px;
 }
 
 @media (max-width: 576px) {
   .product-card-cover {
-    height: 120px;
+    height: 150px;
   }
+
   .add-to-cart-btn span {
     font-size: 12px;
   }
-  /* NEW: Reduce product title font size on mobile */
+
+  /* Hide "Add to Cart" text on mobile, show only icon */
+  .add-to-cart-text {
+    display: none !important;
+  }
+
+  /* Make button square on mobile */
+  .ant-btn-primary {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    min-width: 32px !important;
+  }
+
+  /* Left align plus icon on mobile */
+  .plus-icon-container {
+    justify-content: flex-start !important;
+  }
+
+  /* Mobile: Stack plus button below title */
+  .product-header-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .plus-icon-wrapper {
+    margin-left: 0;
+    margin-top: 8px;
+  }
+
+  /* Reduce product title font size on mobile */
   .product-title-link {
     font-size: 14px;
+  }
+
+  /* Product Detail Page Mobile Styles */
+  .ant-typography h2 {
+    font-size: 20px !important;
+  }
+
+  .ant-typography h3 {
+    font-size: 18px !important;
+  }
+
+  /* Reduce price font size on mobile */
+  .product-detail-price {
+    font-size: 24px !important;
+  }
+
+  /* Reduce description font size */
+  .ant-typography p {
+    font-size: 13px !important;
+    line-height: 1.6 !important;
+  }
+
+  /* Smaller buttons on mobile */
+  .ant-btn-lg {
+    height: 40px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    font-size: 14px !important;
+  }
+
+  /* Smaller quantity controls */
+  .ant-btn-sm {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  /* Reduce card padding on mobile */
+  .ant-card-body {
+    padding: 16px !important;
+  }
+
+  /* Reduce row gutters on mobile */
+  .ant-row {
+    row-gap: 16px !important;
+  }
+
+  /* Smaller tags */
+  .ant-tag {
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+  }
+
+  /* Smaller rate stars */
+  .ant-rate {
+    font-size: 14px !important;
+  }
+
+  /* Reduce image height on product detail page */
+  .product-detail-image {
+    height: 250px !important;
+  }
+
+  /* Smaller thumbnails */
+  .product-thumbnail {
+    width: 60px !important;
+    height: 60px !important;
   }
 }
 
@@ -68,6 +240,7 @@
     flex-direction: column;
     align-items: flex-start;
   }
+
   .admin-actions {
     margin-top: 16px;
     display: flex;
@@ -75,11 +248,13 @@
     width: 100%;
     align-items: stretch;
   }
+
   .admin-actions .ant-space-item {
     width: 100%;
   }
-  .admin-actions .ant-space-item > .ant-btn,
-  .admin-actions .ant-space-item > a > .ant-btn {
+
+  .admin-actions .ant-space-item>.ant-btn,
+  .admin-actions .ant-space-item>a>.ant-btn {
     width: 100%;
   }
 }

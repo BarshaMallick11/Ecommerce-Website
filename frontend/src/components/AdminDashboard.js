@@ -45,20 +45,57 @@ const AdminDashboard = () => {
     };
 
     const handleModalFinish = async (values) => {
-        const config = { headers: { Authorization: `Bearer ${token}` } };
+        console.log('=== Form Submit ===');
+        console.log('Values received:', values);
+        console.log('Image file:', values.imageFile);
+
+        // Don't set Content-Type manually - axios will set it automatically for FormData
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        };
+
         try {
+            // Create FormData object
+            const formData = new FormData();
+            formData.append('name', values.name);
+            formData.append('description', values.description);
+            formData.append('price', values.price);
+
+            // Add image file if present
+            if (values.imageFile) {
+                formData.append('image', values.imageFile);
+                console.log('Image appended to FormData');
+            }
+
+            // Log FormData contents
+            console.log('FormData entries:');
+            for (let pair of formData.entries()) {
+                console.log(pair[0], pair[1]);
+            }
+
             if (editingProduct) {
-                await axios.put(`${process.env.REACT_APP_API_URL}/products/${editingProduct._id}`, values, config);
+                console.log('Updating product:', editingProduct._id);
+                await axios.put(`${process.env.REACT_APP_API_URL}/products/${editingProduct._id}`, formData, config);
                 message.success('Product updated successfully');
             } else {
-                await axios.post(`${process.env.REACT_APP_API_URL}/products`, values, config);
+                // For new products, image is required
+                if (!values.imageFile) {
+                    message.error('Please upload a product image');
+                    return;
+                }
+                console.log('Creating new product...');
+                await axios.post(`${process.env.REACT_APP_API_URL}/products`, formData, config);
                 message.success('Product added successfully');
             }
             setIsModalVisible(false);
             setEditingProduct(null);
             fetchProducts();
         } catch (error) {
-            message.error('Failed to save product');
+            console.error('Error saving product:', error);
+            console.error('Error response:', error.response);
+            message.error(error.response?.data?.message || 'Failed to save product');
         }
     };
 
