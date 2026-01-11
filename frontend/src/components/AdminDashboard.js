@@ -47,9 +47,7 @@ const AdminDashboard = () => {
     const handleModalFinish = async (values) => {
         console.log('=== Form Submit ===');
         console.log('Values received:', values);
-        console.log('Image file:', values.imageFile);
 
-        // Don't set Content-Type manually - axios will set it automatically for FormData
         const config = {
             headers: {
                 Authorization: `Bearer ${token}`
@@ -63,10 +61,24 @@ const AdminDashboard = () => {
             formData.append('description', values.description);
             formData.append('price', values.price);
 
-            // Add image file if present
-            if (values.imageFile) {
-                formData.append('image', values.imageFile);
-                console.log('Image appended to FormData');
+            // Add main image file if present
+            if (values.mainImageFile) {
+                formData.append('image', values.mainImageFile);
+                console.log('Main image appended to FormData');
+            }
+
+            // Add additional image files
+            if (values.additionalImageFiles && values.additionalImageFiles.length > 0) {
+                values.additionalImageFiles.forEach((file, index) => {
+                    formData.append('additionalImages', file);
+                    console.log(`Additional image ${index + 1} appended`);
+                });
+            }
+
+            // Add existing images array (for updates - to keep existing images)
+            if (values.existingImages && values.existingImages.length > 0) {
+                formData.append('existingImages', JSON.stringify(values.existingImages));
+                console.log('Existing images:', values.existingImages);
             }
 
             // Log FormData contents
@@ -80,9 +92,9 @@ const AdminDashboard = () => {
                 await axios.put(`${process.env.REACT_APP_API_URL}/products/${editingProduct._id}`, formData, config);
                 message.success('Product updated successfully');
             } else {
-                // For new products, image is required
-                if (!values.imageFile) {
-                    message.error('Please upload a product image');
+                // For new products, main image is required
+                if (!values.mainImageFile) {
+                    message.error('Please upload a main product image');
                     return;
                 }
                 console.log('Creating new product...');

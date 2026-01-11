@@ -112,37 +112,58 @@ router.get('/:id', async (req, res) => {
 // @desc   Create a product
 // @route  POST /products
 // @access Private/Admin
-router.post('/', protect, admin, upload.single("image"), async (req, res) => {
+router.post('/', protect, admin, upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'additionalImages', maxCount: 5 }
+]), async (req, res) => {
     try {
         console.log('=== Product Creation Request ===');
         console.log('Body:', req.body);
-        console.log('File:', req.file);
+        console.log('Files:', req.files);
 
         const { name, price, description } = req.body;
 
-        // Check if image file was uploaded
-        if (!req.file) {
-            console.log('No file uploaded');
-            return res.status(400).json({ message: 'Please upload an image' });
+        // Check if main image file was uploaded
+        if (!req.files || !req.files.image) {
+            console.log('No main image uploaded');
+            return res.status(400).json({ message: 'Please upload a main product image' });
         }
 
-        console.log('Uploading to Cloudinary...');
-        // Upload image to Cloudinary
-        const result = await cloudinary.uploader.upload(
-            `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
+        console.log('Uploading main image to Cloudinary...');
+        // Upload main image to Cloudinary
+        const mainImageResult = await cloudinary.uploader.upload(
+            `data:${req.files.image[0].mimetype};base64,${req.files.image[0].buffer.toString("base64")}`,
             {
-                folder: 'ecommerce-products', // Optional: organize images in folders
+                folder: 'ecommerce-products',
                 resource_type: 'auto'
             }
         );
-        console.log('Cloudinary upload successful:', result.secure_url);
+        console.log('Main image uploaded:', mainImageResult.secure_url);
 
-        // Create product with Cloudinary image URL
+        // Upload additional images if present
+        const additionalImageUrls = [];
+        if (req.files.additionalImages && req.files.additionalImages.length > 0) {
+            console.log(`Uploading ${req.files.additionalImages.length} additional images...`);
+            for (const file of req.files.additionalImages) {
+                const result = await cloudinary.uploader.upload(
+                    `data:${file.mimetype};base64,${file.buffer.toString("base64")}`,
+                    {
+                        folder: 'ecommerce-products',
+                        resource_type: 'auto'
+                    }
+                );
+                additionalImageUrls.push(result.secure_url);
+                console.log('Additional image uploaded:', result.secure_url);
+            }
+        }
+
+        // Create product with Cloudinary image URLs
         const product = new Product({
             name,
             price,
             description,
-            image: result.secure_url
+            image: mainImageResult.secure_url,
+            images: additionalImageUrls
         });
 
         const createdProduct = await product.save();
@@ -158,9 +179,12 @@ router.post('/', protect, admin, upload.single("image"), async (req, res) => {
 // @desc   Update a product
 // @route  PUT /products/:id
 // @access Private/Admin
-router.put('/:id', protect, admin, upload.single("image"), async (req, res) => {
+router.put('/:id', protect, admin, upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'additionalImages', maxCount: 5 }
+]), async (req, res) => {
     try {
-        const { name, price, description } = req.body;
+        const { name, price, description, existingImages } = req.body;
         const product = await Product.findById(req.params.id);
 
         if (product) {
@@ -168,18 +192,52 @@ router.put('/:id', protect, admin, upload.single("image"), async (req, res) => {
             product.price = price;
             product.description = description;
 
-            // If a new image was uploaded, update it
-            if (req.file) {
+            // If a new main image was uploaded, update it
+            if (req.files && req.files.image) {
                 const result = await cloudinary.uploader.upload(
-                    `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
+                    `data:${req.files.image[0].mimetype};base64,${req.files.image[0].buffer.toString("base64")}`,
                     {
                         folder: 'ecommerce-products',
                         resource_type: 'auto'
                     }
                 );
                 product.image = result.secure_url;
+                console.log('Main image updated:', result.secure_url);
             }
-            // If no new image, keep the existing one
+
+            // Handle additional images
+            let updatedAdditionalImages = [];
+
+            // Keep existing images that weren't removed
+            if (existingImages) {
+                const existingImagesArray = typeof existingImages === 'string' ? JSON.parse(existingImages) : existingImages;
+                updatedAdditionalImages = [...existingImagesArray];
+                console.log('Keeping existing images:', updatedAdditionalImages);
+            }
+
+            // Upload new additional images
+            if (req.files && req.files.additionalImages && req.files.additionalImages.length > 0) {
+                console.log(`Uploading ${req.files.additionalImages.length} new additional images...`);
+                for (const file of req.files.additionalImages) {
+                    // Check if we haven't exceeded the limit
+                    if (updatedAdditionalImages.length >= 5) {
+                        console.log('Maximum 5 additional images reached');
+                        break;
+                    }
+
+                    const result = await cloudinary.uploader.upload(
+                        `data:${file.mimetype};base64,${file.buffer.toString("base64")}`,
+                        {
+                            folder: 'ecommerce-products',
+                            resource_type: 'auto'
+                        }
+                    );
+                    updatedAdditionalImages.push(result.secure_url);
+                    console.log('Additional image uploaded:', result.secure_url);
+                }
+            }
+
+            product.images = updatedAdditionalImages;
 
             const updatedProduct = await product.save();
             res.json(updatedProduct);

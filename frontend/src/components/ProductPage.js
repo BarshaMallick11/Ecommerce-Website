@@ -16,15 +16,24 @@ const ProductPage = () => {
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [quantity, setQuantity] = useState(1);
+    const [selectedImage, setSelectedImage] = useState(null); // For image gallery
+    const [previewVisible, setPreviewVisible] = useState(false); // For image preview modal
     const { id } = useParams();
     const { addToCart } = useCart();
     const { user } = useAuth();
+
+    // Combine main image and additional images
+    const allImages = product ? [
+        product.image,
+        ...(product.images || [])
+    ].filter(Boolean) : []; // Filter out any null/undefined values
 
     const fetchProduct = useCallback(async () => {
         setLoading(true);
         try {
             const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/products/${id}`);
             setProduct(data);
+            setSelectedImage(data.image); // Set main image as selected by default
         } catch (error) {
             console.error("Failed to fetch product", error);
         } finally {
@@ -77,7 +86,7 @@ const ProductPage = () => {
                 }}
             >
                 <Row gutter={[48, 32]} style={{ rowGap: window.innerWidth <= 576 ? '16px' : '32px' }}>
-                    {/* Left Side - Product Image */}
+                    {/*Left Side - Product Image Gallery */}
                     <Col xs={24} md={10}>
                         <div className="product-detail-image" style={{
                             backgroundColor: '#f5f5f5',
@@ -91,46 +100,58 @@ const ProductPage = () => {
                             <Image
                                 width="100%"
                                 height="100%"
-                                style={{ objectFit: 'cover' }}
-                                src={product.image || 'https://placehold.co/600x600/EEE/31343C?text=No+Image'}
+                                style={{ objectFit: 'cover', cursor: 'pointer' }}
+                                src={selectedImage || product.image || 'https://placehold.co/600x600/EEE/31343C?text=No+Image'}
                                 alt={product.name}
-                                preview={false}
+                                preview={{
+                                    visible: previewVisible,
+                                    onVisibleChange: (visible) => setPreviewVisible(visible),
+                                    src: selectedImage || product.image
+                                }}
+                                onClick={() => setPreviewVisible(true)}
                             />
                         </div>
 
-                        {/* Thumbnail Images */}
-                        <div style={{
-                            display: 'flex',
-                            gap: '12px',
-                            marginTop: '16px',
-                            justifyContent: 'center'
-                        }}>
-                            {[1, 2, 3].map((_, index) => (
-                                <div
-                                    key={index}
-                                    className="product-thumbnail"
-                                    style={{
-                                        width: '80px',
-                                        height: '80px',
-                                        border: index === 0 ? '2px solid #52c41a' : '1px solid #e8e8e8',
-                                        borderRadius: '8px',
-                                        padding: '8px',
-                                        cursor: 'pointer',
-                                        backgroundColor: '#f5f5f5'
-                                    }}
-                                >
-                                    <img
-                                        src={product.image}
-                                        alt={`Thumbnail ${index + 1}`}
+                        {/* Thumbnail Images - Show all available images */}
+                        {allImages.length > 1 && (
+                            <div style={{
+                                display: 'flex',
+                                gap: '12px',
+                                marginTop: '16px',
+                                justifyContent: 'flex-start',
+                                flexWrap: 'wrap'
+                            }}>
+                                {allImages.map((imgUrl, index) => (
+                                    <div
+                                        key={index}
+                                        className="product-thumbnail"
+                                        onClick={() => setSelectedImage(imgUrl)}
                                         style={{
-                                            width: '100%',
-                                            height: '100%',
-                                            objectFit: 'contain'
+                                            width: '80px',
+                                            height: '80px',
+                                            border: selectedImage === imgUrl ? '2px solid #52c41a' : '1px solid #e8e8e8',
+                                            borderRadius: '8px',
+                                            padding: '4px',
+                                            cursor: 'pointer',
+                                            backgroundColor: '#fff',
+                                            transition: 'all 0.3s ease',
+                                            boxShadow: selectedImage === imgUrl ? '0 2px 8px rgba(82,196,26,0.3)' : 'none'
                                         }}
-                                    />
-                                </div>
-                            ))}
-                        </div>
+                                    >
+                                        <img
+                                            src={imgUrl}
+                                            alt={`View ${index + 1}`}
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                objectFit: 'cover',
+                                                borderRadius: '4px'
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </Col>
 
                     {/* Right Side - Product Details */}
