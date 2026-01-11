@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import BackButton from './BackButton';
+import UpiPaymentModal from './UpiPaymentModal';
 
 const { Title } = Typography;
 
@@ -14,6 +15,8 @@ const CheckoutPage = () => {
     const { user, token } = useAuth();
     const navigate = useNavigate();
     const [paymentMethod, setPaymentMethod] = useState('Razorpay'); // Default to Razorpay
+    const [upiModalVisible, setUpiModalVisible] = useState(false);
+    const [pendingOrderId, setPendingOrderId] = useState(null);
 
     const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -32,8 +35,10 @@ const CheckoutPage = () => {
 
         if (paymentMethod === 'Razorpay') {
             handleRazorpayPayment();
-        } else {
+        } else if (paymentMethod === 'COD') {
             handleCodOrder();
+        } else if (paymentMethod === 'UPI') {
+            handleUpiOrder();
         }
     };
 
@@ -90,6 +95,35 @@ const CheckoutPage = () => {
         }
     };
 
+    const handleUpiOrder = async () => {
+        try {
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            const orderData = {
+                cartItems,
+                totalAmount: total,
+                shippingAddress: JSON.parse(localStorage.getItem('shippingAddress')),
+            };
+            const { data } = await axios.post(
+                `${process.env.REACT_APP_API_URL}/api/payment/upi-order`,
+                orderData,
+                config
+            );
+
+            // Order created, now show UPI payment modal
+            setPendingOrderId(data.orderId);
+            setUpiModalVisible(true);
+        } catch (error) {
+            message.error('Failed to create order.');
+        }
+    };
+
+    const handleUpiPaymentSuccess = () => {
+        clearCart();
+        localStorage.removeItem('shippingAddress');
+        message.success('Payment proof submitted! Awaiting admin verification.');
+        navigate('/orders');
+    };
+
     return (
         <div style={{ maxWidth: '500px', margin: 'auto' }}>
             <BackButton />
@@ -98,14 +132,28 @@ const CheckoutPage = () => {
             <Radio.Group onChange={(e) => setPaymentMethod(e.target.value)} value={paymentMethod} style={{ marginBottom: 24 }}>
                 <Space direction="vertical">
                     <Radio value="Razorpay">Pay Online with Razorpay</Radio>
+                    <Radio value="UPI">
+                        Pay via UPI (Manual)
+                        <span style={{ fontSize: 12, color: '#888', marginLeft: 8 }}>
+                            ₹0 fees • No gateway
+                        </span>
+                    </Radio>
                     <Radio value="COD">Cash on Delivery (COD)</Radio>
                 </Space>
             </Radio.Group>
 
             <Title level={4}>Total: ₹{total.toFixed(2)}</Title>
             <Button type="primary" size="large" onClick={handlePlaceOrder}>
-                {paymentMethod === 'COD' ? 'Place Order' : 'Pay with Razorpay'}
+                {paymentMethod === 'COD' ? 'Place Order' : paymentMethod === 'UPI' ? 'Proceed to Pay' : 'Pay with Razorpay'}
             </Button>
+
+            <UpiPaymentModal
+                visible={upiModalVisible}
+                onClose={() => setUpiModalVisible(false)}
+                orderId={pendingOrderId}
+                amount={total}
+                onSuccess={handleUpiPaymentSuccess}
+            />
         </div>
     );
 };

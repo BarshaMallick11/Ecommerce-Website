@@ -88,4 +88,34 @@ router.post('/cod-order', protect, async (req, res) => {
     }
 });
 
+// @desc   Place a UPI order (awaiting payment proof)
+// @route  POST /api/payment/upi-order
+// @access Private
+router.post('/upi-order', protect, async (req, res) => {
+    const { cartItems, totalAmount, shippingAddress } = req.body;
+
+    try {
+        const newOrder = new Order({
+            user: req.user._id,
+            products: cartItems.map(item => ({ product: item, quantity: item.quantity })),
+            totalAmount: totalAmount,
+            paymentMethod: 'UPI',
+            shippingAddress: shippingAddress,
+            paymentId: `UPI-PENDING-${Date.now()}`,
+            status: 'Processing', // Will be activated after admin approves payment
+        });
+
+        const savedOrder = await newOrder.save();
+        res.status(201).json({
+            status: 'success',
+            orderId: savedOrder._id,
+            message: 'Order created. Please submit payment proof to complete.'
+        });
+    } catch (error) {
+        console.error('UPI Order Error:', error);
+        res.status(500).json({ status: 'failure', message: 'Could not place order.' });
+    }
+});
+
 module.exports = router;
+

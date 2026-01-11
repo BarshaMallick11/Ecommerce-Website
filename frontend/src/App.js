@@ -31,168 +31,170 @@ import AdminSettings from './components/AdminSettings';
 import ForgotPasswordPage from './components/ForgotPasswordPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import AdminPincodeManager from './components/AdminPincodeManager';
+import AdminUpiPayments from './components/AdminUpiPayments';
 const { Header, Content, Footer } = Layout;
 const { Title } = Typography;
 
 const AppHeader = () => {
-    const { user, logout } = useAuth();
-    const [drawerVisible, setDrawerVisible] = useState(false);
+  const { user, logout } = useAuth();
+  const [drawerVisible, setDrawerVisible] = useState(false);
 
-    const showDrawer = () => setDrawerVisible(true);
-    const closeDrawer = () => setDrawerVisible(false);
+  const showDrawer = () => setDrawerVisible(true);
+  const closeDrawer = () => setDrawerVisible(false);
 
-    const desktopMenuItems = [
-        { key: '1', label: <Link to="/profile">My Profile</Link> },
-        // Conditionally add items for non-admins
-        ...(!user?.isAdmin ? [
-            { key: '2', label: <Link to="/orders">Order History</Link> },
-            { key: '3', label: <Link to="/track-order">Track Order</Link> },
-        ] : []),
-        // Conditionally add item for admins
-        ...(user?.isAdmin ? [{ key: '4', label: <Link to="/admin">Admin Panel</Link> }] : []),
-        { key: '5', label: <Link to="/help">Help & Contact</Link> },
-        { key: '6', label: <div onClick={logout}>Logout</div> },
-    ];
+  const desktopMenuItems = [
+    { key: '1', label: <Link to="/profile">My Profile</Link> },
+    // Conditionally add items for non-admins
+    ...(!user?.isAdmin ? [
+      { key: '2', label: <Link to="/orders">Order History</Link> },
+      { key: '3', label: <Link to="/track-order">Track Order</Link> },
+    ] : []),
+    // Conditionally add item for admins
+    ...(user?.isAdmin ? [{ key: '4', label: <Link to="/admin">Admin Panel</Link> }] : []),
+    { key: '5', label: <Link to="/help">Help & Contact</Link> },
+    { key: '6', label: <div onClick={logout}>Logout</div> },
+  ];
 
-    // This component is created to ensure it re-renders correctly on state change
-    const MobileNavMenu = () => {
-        if (user) {
-            return (
-                <Menu mode="inline" onClick={closeDrawer}>
-                    <Menu.Item key="welcome" style={{ color: '#4f772d', fontWeight: 'bold' }}>Welcome, {user.username}</Menu.Item>
-                    <Menu.Divider />
-                    <Menu.Item key="home"><Link to="/">Home</Link></Menu.Item>
-                    <Menu.Item key="profile"><Link to="/profile">My Profile</Link></Menu.Item>
-                    {!user.isAdmin && <Menu.Item key="orders"><Link to="/orders">Order History</Link></Menu.Item>}
-                    {user.isAdmin && <Menu.Item key="admin"><Link to="/admin">Admin Panel</Link></Menu.Item>}
-                    <Menu.Item key="help"><Link to="/help">Help & Contact</Link></Menu.Item>
-                    {!user.isAdmin && <Menu.Item key="track"><Link to="/track-order">Track Order</Link></Menu.Item>}
-                    <Menu.Item key="logout" onClick={logout}>Logout</Menu.Item>
-                </Menu>
-            );
-        } else {
-            return (
-                <Menu mode="inline" onClick={closeDrawer}>
-                    <Menu.Item key="login"><Link to="/login">Login</Link></Menu.Item>
-                    <Menu.Item key="help"><Link to="/help">Help & Contact</Link></Menu.Item>
-                </Menu>
-            );
-        }
-    };
+  // This component is created to ensure it re-renders correctly on state change
+  const MobileNavMenu = () => {
+    if (user) {
+      return (
+        <Menu mode="inline" onClick={closeDrawer}>
+          <Menu.Item key="welcome" style={{ color: '#4f772d', fontWeight: 'bold' }}>Welcome, {user.username}</Menu.Item>
+          <Menu.Divider />
+          <Menu.Item key="home"><Link to="/">Home</Link></Menu.Item>
+          <Menu.Item key="profile"><Link to="/profile">My Profile</Link></Menu.Item>
+          {!user.isAdmin && <Menu.Item key="orders"><Link to="/orders">Order History</Link></Menu.Item>}
+          {user.isAdmin && <Menu.Item key="admin"><Link to="/admin">Admin Panel</Link></Menu.Item>}
+          <Menu.Item key="help"><Link to="/help">Help & Contact</Link></Menu.Item>
+          {!user.isAdmin && <Menu.Item key="track"><Link to="/track-order">Track Order</Link></Menu.Item>}
+          <Menu.Item key="logout" onClick={logout}>Logout</Menu.Item>
+        </Menu>
+      );
+    } else {
+      return (
+        <Menu mode="inline" onClick={closeDrawer}>
+          <Menu.Item key="login"><Link to="/login">Login</Link></Menu.Item>
+          <Menu.Item key="help"><Link to="/help">Help & Contact</Link></Menu.Item>
+        </Menu>
+      );
+    }
+  };
 
-    return (
-        <Header style={{ backgroundColor: '#4f772d', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 24px' }}>
-            <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-                <img src="/ecommerce_logo1.png" alt="Premium.Store" style={{ height: '40px', marginRight: '15px', borderRadius: '50%', border: '0.5px solid white', backgroundColor: 'white' }}  />
-                <Title level={3} style={{ color: 'white', lineHeight: '64px', margin: 0, whiteSpace: 'nowrap' }}>
-                    Premium.Store
-                </Title>
+  return (
+    <Header style={{ backgroundColor: '#4f772d', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 24px' }}>
+      <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+        <img src="/ecommerce_logo1.png" alt="Premium.Store" style={{ height: '40px', marginRight: '15px', borderRadius: '50%', border: '0.5px solid white', backgroundColor: 'white' }} />
+        <Title level={3} style={{ color: 'white', lineHeight: '64px', margin: 0, whiteSpace: 'nowrap' }}>
+          Premium.Store
+        </Title>
+      </Link>
+
+      <div className="header-search">
+        <SearchBox />
+      </div>
+
+      <div className="header-right-side">
+        <Space>
+          {user ? (
+            <Dropdown menu={{ items: desktopMenuItems }} placement="bottomRight">
+              <Button type="primary">
+                Welcome, {user.username} <DownOutlined />
+              </Button>
+            </Dropdown>
+          ) : (
+            <Link to="/login">
+              <Button type="primary">Login</Button>
             </Link>
+          )}
+          {!user?.isAdmin && <CartIcon />}
+        </Space>
+      </div>
 
-            <div className="header-search">
-                <SearchBox />
-            </div>
+      <div className="mobile-menu-icon">
+        <Space size="middle" align='center'>
+          {!user?.isAdmin && <CartIcon />}
+          <Button type="primary" onClick={showDrawer} icon={<MenuOutlined />} />
+        </Space>
+      </div>
 
-            <div className="header-right-side">
-                <Space>
-                    {user ? (
-                        <Dropdown menu={{ items: desktopMenuItems }} placement="bottomRight">
-                            <Button type="primary">
-                                Welcome, {user.username} <DownOutlined />
-                            </Button>
-                        </Dropdown>
-                    ) : (
-                        <Link to="/login">
-                            <Button type="primary">Login</Button>
-                        </Link>
-                    )}
-                    {!user?.isAdmin && <CartIcon />}
-                </Space>
-            </div>
-            
-            <div className="mobile-menu-icon">
-              <Space size="middle" align='center'>
-                {!user?.isAdmin && <CartIcon />}
-                <Button type="primary" onClick={showDrawer} icon={<MenuOutlined />} />
-              </Space>
-            </div>
-
-            <Drawer title="Menu" placement="right" onClose={closeDrawer} open={drawerVisible} width={300}>
-                <div style={{ marginBottom: '20px' }}>
-                    <SearchBox onSearchCallback={closeDrawer}/>
-                </div>
-                <MobileNavMenu />
-            </Drawer>
-        </Header>
-    );
+      <Drawer title="Menu" placement="right" onClose={closeDrawer} open={drawerVisible} width={300}>
+        <div style={{ marginBottom: '20px' }}>
+          <SearchBox onSearchCallback={closeDrawer} />
+        </div>
+        <MobileNavMenu />
+      </Drawer>
+    </Header>
+  );
 };
 
 function App() {
-    const theme = {
-      token: {
-        colorPrimary: '#446950',
-      },
-    };
-  
-    return (
-      <ConfigProvider theme={theme}>
-        <AuthProvider>
-          <CartProvider>
-            <Router>
-              <Layout className="layout" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-                <AppHeader />
-                <Content className="site-content" style={{ padding: '0 50px', background: '#f4f1de', flex: 1}}>
-                  <div 
-                    className="site-layout-content" 
-                    style={{ 
-                      padding: 0, 
-                      minHeight: 280, 
-                      marginTop: 24,
-                      marginBottom: 48
-                    }}
-                  >
-                    <Routes>
-                      {/* Public Routes */}
-                      <Route path="/" element={<ProductList />} />
-                      <Route path="/search/:keyword" element={<ProductList />} />
-                      <Route path="/product/:id" element={<ProductPage />} />
-                      <Route path="/login" element={<LoginPage />} />
-                      <Route path="/register" element={<RegisterPage />} />
-                      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-                      <Route path="/track-order" element={<TrackOrderPage />} />
-                      <Route path="/help" element={<HelpPage />} />
-                      <Route path="/cart" element={<CartPage />} />
+  const theme = {
+    token: {
+      colorPrimary: '#446950',
+    },
+  };
 
-                      {/* Private User Routes */}
-                      <Route path="" element={<PrivateRoute />}>
-                          <Route path="/profile" element={<ProfilePage />} />
-                          <Route path="/orders" element={<OrderHistoryPage />} />
-                          <Route path="/shipping" element={<ShippingPage />} />
-                          <Route path="/checkout" element={<CheckoutPage />} />
-                      </Route>
-                      
-                      {/* Private Admin Routes */}
-                      <Route path="/admin" element={<AdminRoute />}>
-                          <Route path="" element={<AdminDashboard />} />
-                          <Route path="orders" element={<AdminOrderList />} />
-                          <Route path="users" element={<AdminUserList />} />
-                          <Route path="queries" element={<AdminQueryList />} />
-                          <Route path="settings" element={<AdminSettings />} />
-                          <Route path="pincodes" element={<AdminPincodeManager />} />
-                      </Route>
-                    </Routes>
-                  </div>
-                </Content>
-                <Footer style={{ textAlign: 'center', backgroundColor: '#4f772d', color: 'white' }}>
-                  Premium.Store©2025 | All Rights Reserved.
-                </Footer>
-              </Layout>
-            </Router>
-          </CartProvider>
-        </AuthProvider>
-      </ConfigProvider>
-    );
-  }
-  
-  export default App;
+  return (
+    <ConfigProvider theme={theme}>
+      <AuthProvider>
+        <CartProvider>
+          <Router>
+            <Layout className="layout" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+              <AppHeader />
+              <Content className="site-content" style={{ padding: '0 50px', background: '#f4f1de', flex: 1 }}>
+                <div
+                  className="site-layout-content"
+                  style={{
+                    padding: 0,
+                    minHeight: 280,
+                    marginTop: 24,
+                    marginBottom: 48
+                  }}
+                >
+                  <Routes>
+                    {/* Public Routes */}
+                    <Route path="/" element={<ProductList />} />
+                    <Route path="/search/:keyword" element={<ProductList />} />
+                    <Route path="/product/:id" element={<ProductPage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+                    <Route path="/track-order" element={<TrackOrderPage />} />
+                    <Route path="/help" element={<HelpPage />} />
+                    <Route path="/cart" element={<CartPage />} />
+
+                    {/* Private User Routes */}
+                    <Route path="" element={<PrivateRoute />}>
+                      <Route path="/profile" element={<ProfilePage />} />
+                      <Route path="/orders" element={<OrderHistoryPage />} />
+                      <Route path="/shipping" element={<ShippingPage />} />
+                      <Route path="/checkout" element={<CheckoutPage />} />
+                    </Route>
+
+                    {/* Private Admin Routes */}
+                    <Route path="/admin" element={<AdminRoute />}>
+                      <Route path="" element={<AdminDashboard />} />
+                      <Route path="orders" element={<AdminOrderList />} />
+                      <Route path="upi-payments" element={<AdminUpiPayments />} />
+                      <Route path="users" element={<AdminUserList />} />
+                      <Route path="queries" element={<AdminQueryList />} />
+                      <Route path="settings" element={<AdminSettings />} />
+                      <Route path="pincodes" element={<AdminPincodeManager />} />
+                    </Route>
+                  </Routes>
+                </div>
+              </Content>
+              <Footer style={{ textAlign: 'center', backgroundColor: '#4f772d', color: 'white' }}>
+                Premium.Store©2025 | All Rights Reserved.
+              </Footer>
+            </Layout>
+          </Router>
+        </CartProvider>
+      </AuthProvider>
+    </ConfigProvider>
+  );
+}
+
+export default App;

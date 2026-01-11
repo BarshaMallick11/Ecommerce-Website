@@ -18,6 +18,7 @@ const AdminNav = () => {
         if (path.includes('/admin/queries')) return '/admin/queries';
         if (path.includes('/admin/settings')) return '/admin/settings';
         if (path.includes('/admin/pincodes')) return '/admin/pincodes';
+        if (path.includes('/admin/upi-payments')) return '/admin/upi-payments';
         return '/admin';
     };
 
@@ -34,6 +35,7 @@ const AdminNav = () => {
             >
                 <TabPane tab="Product Management" key="/admin" />
                 <TabPane tab="Order Management" key="/admin/orders" />
+                <TabPane tab="UPI Payments" key="/admin/upi-payments" />
                 <TabPane tab="User Management" key="/admin/users" />
                 <TabPane tab="Customer Queries" key="/admin/queries" />
                 <TabPane tab="Site Settings" key="/admin/settings" />

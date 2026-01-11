@@ -31,6 +31,7 @@ const settingsRouter = require('./routes/settings'); // Add
 const queriesRouter = require('./routes/queries');
 const shippingRouter = require('./routes/shipping');
 const pincodesRouter = require('./routes/pincodes');
+const upiPaymentRouter = require('./routes/upiPayment');
 
 app.use('/products', productsRouter);
 app.use('/api/auth', authRouter);
@@ -44,6 +45,7 @@ app.use('/api/settings', settingsRouter); // Add
 app.use('/api/queries', queriesRouter);
 app.use('/api/shipping', shippingRouter);
 app.use('/api/pincodes', pincodesRouter);
+app.use('/api/upi-payment', upiPaymentRouter);
 app.listen(port, () => {
-    console.log(`Server is running on port: ${port}`);
+  console.log(`Server is running on port: ${port}`);
 });

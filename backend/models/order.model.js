@@ -10,7 +10,7 @@ const orderSchema = new Schema({
     }],
     totalAmount: { type: Number, required: true },
     paymentId: { type: String },
-    paymentMethod: { type: String, required: true, enum: ['Razorpay', 'COD'], default: 'Razorpay' },
+    paymentMethod: { type: String, required: true, enum: ['Razorpay', 'COD', 'UPI'], default: 'Razorpay' },
     shippingAddress: {
         address: { type: String, required: true },
         city: { type: String, required: true },
@@ -18,11 +18,11 @@ const orderSchema = new Schema({
         country: { type: String, required: true },
         phoneNo: { type: String, required: true },
     },
-    status: { 
-        type: String, 
-        required: true, 
-        enum: ['Processing', 'Shipped', 'Delivered', 'Cancelled'], 
-        default: 'Processing' 
+    status: {
+        type: String,
+        required: true,
+        enum: ['Processing', 'Shipped', 'Delivered', 'Cancelled'],
+        default: 'Processing'
     },
     trackingNumber: { type: String, default: '' },
     estimatedDeliveryDate: { type: Date },

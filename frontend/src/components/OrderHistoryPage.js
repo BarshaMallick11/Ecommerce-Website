@@ -46,23 +46,50 @@ const OrderHistoryPage = () => {
         <div>
             <BackButton />
             <Title level={2}>My Orders</Title>
-<List
+            <List
                 grid={{ gutter: 16, xs: 1, sm: 1, md: 2 }}
                 dataSource={orders}
                 renderItem={order => (
                     <List.Item>
                         <Card title={`Order Date: ${moment(order.createdAt).format('YYYY-MM-DD')}`}>
                             {order.status === 'Cancelled' ? (
-                                <Alert 
-                                    message="Order Cancelled" 
-                                    description={`This order was cancelled on ${moment(order.cancelledAt).format('YYYY-MM-DD')}.`} 
-                                    type="error" 
-                                    showIcon 
+                                <Alert
+                                    message="Order Cancelled"
+                                    description={`This order was cancelled on ${moment(order.cancelledAt).format('YYYY-MM-DD')}.`}
+                                    type="error"
+                                    showIcon
                                 />
                             ) : (
                                 <>
+                                    {/* UPI Payment Status Alert */}
+                                    {order.paymentMethod === 'UPI' && order.upiPaymentStatus && (
+                                        <Alert
+                                            message={
+                                                order.upiPaymentStatus === 'pending' ? 'Payment Verification Pending' :
+                                                    order.upiPaymentStatus === 'approved' ? 'Payment Verified ✓' :
+                                                        order.upiPaymentStatus === 'rejected' ? 'Payment Rejected' :
+                                                            'Payment Proof Not Submitted'
+                                            }
+                                            description={
+                                                order.upiPaymentStatus === 'pending' ? 'Your payment proof is under review by admin. This usually takes 1-24 hours.' :
+                                                    order.upiPaymentStatus === 'approved' ? 'Your payment has been verified. Order will be shipped soon!' :
+                                                        order.upiPaymentStatus === 'rejected' ? `Payment verification failed. ${order.upiPaymentNote || 'Please contact support.'}` :
+                                                            'Please submit your payment proof to activate this order.'
+                                            }
+                                            type={
+                                                order.upiPaymentStatus === 'pending' ? 'warning' :
+                                                    order.upiPaymentStatus === 'approved' ? 'success' :
+                                                        order.upiPaymentStatus === 'rejected' ? 'error' :
+                                                            'info'
+                                            }
+                                            showIcon
+                                            style={{ marginBottom: 16 }}
+                                        />
+                                    )}
+
                                     <p><Text strong>Order ID:</Text> {order._id}</p>
                                     <p><Text strong>Total Amount:</Text> ₹{order.totalAmount.toFixed(2)}</p>
+                                    <p><Text strong>Payment Method:</Text> {order.paymentMethod}</p>
                                     <p><Text strong>Status:</Text> {order.status}</p>
                                     {order.shippedAt && <p><Text strong>Shipped On:</Text> {moment(order.shippedAt).format('YYYY-MM-DD')}</p>}
                                     {order.deliveredAt && <p><Text strong>Delivered On:</Text> {moment(order.deliveredAt).format('YYYY-MM-DD')}</p>}

@@ -1,6 +1,7 @@
 // backend/routes/orders.js
 const router = require('express').Router();
 const Order = require('../models/order.model');
+const UpiPayment = require('../models/upiPayment.model');
 const { protect, admin } = require('../middleware/authMiddleware');
 
 // @desc   Get all orders
@@ -8,9 +9,34 @@ const { protect, admin } = require('../middleware/authMiddleware');
 // @access Private/Admin
 router.get('/all', protect, admin, async (req, res) => {
     try {
-        const orders = await Order.find({}).populate('user', 'id username').sort({ createdAt: -1 });
-        res.json(orders);
+        // Get all orders
+        const allOrders = await Order.find({}).populate('user', 'id username').sort({ createdAt: -1 });
+
+        // Filter out UPI orders that don't have approved payment
+        const filteredOrders = [];
+
+        for (const order of allOrders) {
+            // If it's not a UPI order, include it
+            if (order.paymentMethod !== 'UPI') {
+                filteredOrders.push(order);
+                continue;
+            }
+
+            // If it's a UPI order, check if payment is approved
+            const payment = await UpiPayment.findOne({
+                orderId: order._id,
+                status: 'approved'
+            });
+
+            // Only include UPI orders with approved payments
+            if (payment) {
+                filteredOrders.push(order);
+            }
+        }
+
+        res.json(filteredOrders);
     } catch (error) {
+        console.error('Error fetching orders:', error);
         res.status(500).json({ message: 'Error fetching all orders.' });
     }
 });
@@ -51,8 +77,23 @@ router.put('/:id/status', protect, admin, async (req, res) => {
 router.get('/', protect, async (req, res) => {
     try {
         const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
-        res.json(orders);
+
+        // For each UPI order, attach payment verification status
+        const ordersWithPaymentStatus = await Promise.all(orders.map(async (order) => {
+            const orderObj = order.toObject();
+
+            if (order.paymentMethod === 'UPI') {
+                const payment = await UpiPayment.findOne({ orderId: order._id });
+                orderObj.upiPaymentStatus = payment ? payment.status : 'no_proof';
+                orderObj.upiPaymentNote = payment ? payment.verificationNote : null;
+            }
+
+            return orderObj;
+        }));
+
+        res.json(ordersWithPaymentStatus);
     } catch (error) {
+        console.error('Error fetching user orders:', error);
         res.status(500).json({ message: 'Error fetching user orders.' });
     }
 });

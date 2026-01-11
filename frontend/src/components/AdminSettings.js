@@ -1,26 +1,36 @@
 // frontend/src/components/AdminSettings.js
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Button, Card, Typography, message, Spin } from 'antd';
+import { Form, Input, Button, Card, Typography, message, Spin, Divider, Switch, Upload, Image } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import AdminNav from './AdminNav'; // Assuming you have created this component
+import AdminNav from './AdminNav';
 
-const { Title } = Typography;
+const { Title, Paragraph, Text } = Typography;
 
 const AdminSettings = () => {
     const [form] = Form.useForm();
     const { token } = useAuth();
     const [loading, setLoading] = useState(true);
+    const [qrCodeFile, setQrCodeFile] = useState(null);
+    const [qrCodePreview, setQrCodePreview] = useState('');
+    const [uploadingQR, setUploadingQR] = useState(false);
 
     useEffect(() => {
         const fetchSettings = async () => {
             setLoading(true);
             try {
                 const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/settings`);
-                form.setFieldsValue({ 
+                form.setFieldsValue({
                     contactPhone: data.contactPhone,
-                    contactEmail: data.contactEmail
+                    contactEmail: data.contactEmail,
+                    upiId: data.upiId || 'yourname@okaxis',
+                    upiEnabled: data.upiEnabled !== false
                 });
+                // Set QR code preview if exists
+                if (data.upiQrCodeUrl) {
+                    setQrCodePreview(data.upiQrCodeUrl);
+                }
             } catch (error) {
                 message.error("Could not load site settings.");
             } finally {
@@ -30,11 +40,73 @@ const AdminSettings = () => {
         fetchSettings();
     }, [form]);
 
+    const handleQRCodeUpload = async (file) => {
+        // Validate file
+        const isImage = file.type.startsWith('image/');
+        if (!isImage) {
+            message.error('You can only upload image files!');
+            return false;
+        }
+        const isLt5M = file.size / 1024 / 1024 < 5;
+        if (!isLt5M) {
+            message.error('Image must be smaller than 5MB!');
+            return false;
+        }
+
+        // Create preview
+        const reader = new FileReader();
+        reader.onload = (e) => setQrCodePreview(e.target.result);
+        reader.readAsDataURL(file);
+
+        // Store file for upload
+        setQrCodeFile(file);
+        return false; // Prevent auto upload
+    };
+
     const onFinish = async (values) => {
         const config = { headers: { Authorization: `Bearer ${token}` } };
+
         try {
-            await axios.put(`${process.env.REACT_APP_API_URL}/api/settings`, values, config);
-            message.success('Settings updated!');
+            let qrCodeUrl = qrCodePreview;
+
+            // Upload QR code if a new file was selected
+            if (qrCodeFile) {
+                setUploadingQR(true);
+                const formData = new FormData();
+                formData.append('qrCode', qrCodeFile);
+
+                try {
+                    const { data } = await axios.post(
+                        `${process.env.REACT_APP_API_URL}/api/settings/upload-qr`,
+                        formData,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                                'Content-Type': 'multipart/form-data'
+                            }
+                        }
+                    );
+                    qrCodeUrl = data.url;
+                    message.success('QR code uploaded successfully!');
+                } catch (error) {
+                    message.error('Failed to upload QR code');
+                    setUploadingQR(false);
+                    return;
+                }
+                setUploadingQR(false);
+            }
+
+            // Update settings with QR code URL
+            const settingsData = {
+                ...values,
+                upiQrCodeUrl: qrCodeUrl
+            };
+
+            await axios.put(`${process.env.REACT_APP_API_URL}/api/settings`, settingsData, config);
+            message.success('Settings updated successfully!');
+
+            // Clear the file after successful upload
+            setQrCodeFile(null);
         } catch (error) {
             message.error('Failed to update settings.');
         }
@@ -48,20 +120,113 @@ const AdminSettings = () => {
             <Title level={4} style={{ marginTop: '24px' }}>Site Settings</Title>
 
             {loading ? <Spin /> : (
-                <Card>
-                    <Title level={5}>Contact Information</Title>
-                    <Form form={form} onFinish={onFinish} layout="vertical">
+                <Form form={form} onFinish={onFinish} layout="vertical">
+                    {/* Contact Information */}
+                    <Card style={{ marginBottom: 24 }}>
+                        <Title level={5}>Contact Information</Title>
                         <Form.Item name="contactPhone" label="Contact Phone Number for Help Page">
-                            <Input placeholder="Enter a phone number" />
+                            <Input placeholder="Enter a phone number" size="large" />
                         </Form.Item>
                         <Form.Item name="contactEmail" label="Contact Email for Help Page">
-                            <Input placeholder="Enter an email address" />
+                            <Input placeholder="Enter an email address" size="large" />
                         </Form.Item>
-                        <Form.Item>
-                            <Button type="primary" htmlType="submit">Save Settings</Button>
+                    </Card>
+
+                    {/* UPI Payment Settings */}
+                    <Card style={{ marginBottom: 24 }}>
+                        <Title level={5}>UPI Payment Settings</Title>
+                        <Paragraph type="secondary">
+                            Configure your UPI payment details. These will be shown to customers when they choose UPI payment option.
+                        </Paragraph>
+
+                        <Form.Item
+                            name="upiEnabled"
+                            label="Enable UPI Payments"
+                            valuePropName="checked"
+                        >
+                            <Switch />
                         </Form.Item>
-                    </Form>
-                </Card>
+
+                        <Form.Item
+                            name="upiId"
+                            label="UPI ID"
+                            rules={[{ required: true, message: 'Please enter your UPI ID' }]}
+                            extra="Your UPI ID (e.g., yourname@okaxis, 9876543210@paytm)"
+                        >
+                            <Input
+                                placeholder="yourname@okaxis"
+                                size="large"
+                                prefix="💳"
+                            />
+                        </Form.Item>
+
+                        <Divider />
+
+                        {/* UPI QR Code Upload */}
+                        <div>
+                            <Title level={5}>UPI QR Code</Title>
+                            <Paragraph type="secondary" style={{ marginBottom: 16 }}>
+                                Upload your UPI QR code image. Customers will scan this to pay.
+                            </Paragraph>
+
+                            {/* Current QR Code Preview */}
+                            {qrCodePreview && (
+                                <div style={{ marginBottom: 16 }}>
+                                    <Text strong style={{ display: 'block', marginBottom: 8 }}>Current QR Code:</Text>
+                                    <Image
+                                        src={qrCodePreview}
+                                        alt="UPI QR Code"
+                                        width={200}
+                                        style={{ border: '2px solid #d9d9d9', borderRadius: 8 }}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Upload New QR Code */}
+                            <Upload
+                                beforeUpload={handleQRCodeUpload}
+                                maxCount={1}
+                                listType="picture-card"
+                                showUploadList={false}
+                                accept="image/*"
+                            >
+                                <div>
+                                    <PlusOutlined />
+                                    <div style={{ marginTop: 8 }}>
+                                        {qrCodeFile ? 'Change QR Code' : 'Upload QR Code'}
+                                    </div>
+                                </div>
+                            </Upload>
+
+                            <Paragraph type="secondary" style={{ marginTop: 8, fontSize: 12 }}>
+                                Click to upload a new QR code (JPG, PNG, WebP - Max 5MB)
+                            </Paragraph>
+                        </div>
+
+                        <Divider />
+
+                        <Paragraph type="warning" style={{ fontSize: 12 }}>
+                            <strong>How to get your UPI QR Code:</strong><br />
+                            1. Open Google Pay / PhonePe / Paytm<br />
+                            2. Go to Profile → QR Code<br />
+                            3. Take a screenshot or download your QR<br />
+                            4. Upload it using the button above
+                        </Paragraph>
+                    </Card>
+
+                    {/* Save Button */}
+                    <Form.Item>
+                        <Button
+                            type="primary"
+                            htmlType="submit"
+                            size="large"
+                            loading={uploadingQR}
+                            style={{ minWidth: 200 }}
+                        >
+                            {uploadingQR ? 'Uploading QR Code...' : 'Save All Settings'}
+                        </Button>
+                    </Form.Item>
+                </Form>
             )}
         </div>
     );
