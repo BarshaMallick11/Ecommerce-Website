@@ -3,6 +3,8 @@ const router = require('express').Router();
 const Order = require('../models/order.model');
 const UpiPayment = require('../models/upiPayment.model');
 const { protect, admin } = require('../middleware/authMiddleware');
+const { sendStatusUpdateEmail } = require('../utils/emailService');
+const { sendStatusUpdateSMS } = require('../utils/smsService');
 
 // @desc   Get all orders
 // @route  GET /api/orders/all
@@ -62,6 +64,35 @@ router.put('/:id/status', protect, admin, async (req, res) => {
             }
 
             const updatedOrder = await order.save();
+
+            // Send both email and SMS notifications (non-blocking)
+            try {
+                // Populate user to get email and username
+                const populatedOrder = await Order.findById(updatedOrder._id).populate('user', 'email username');
+                if (populatedOrder && populatedOrder.user) {
+                    // Send Email
+                    const emailSent = await sendStatusUpdateEmail(populatedOrder, populatedOrder.user);
+                    if (emailSent) {
+                        console.log(`Email notification sent to ${populatedOrder.user.email}`);
+                    }
+
+                    // Send SMS (if phone number is available)
+                    if (populatedOrder.shippingAddress && populatedOrder.shippingAddress.phoneNo) {
+                        const smsSent = await sendStatusUpdateSMS(
+                            populatedOrder,
+                            populatedOrder.user,
+                            populatedOrder.shippingAddress.phoneNo
+                        );
+                        if (smsSent) {
+                            console.log(`SMS notification sent to ${populatedOrder.shippingAddress.phoneNo}`);
+                        }
+                    }
+                }
+            } catch (notificationError) {
+                console.error('Failed to send notifications:', notificationError);
+                // We don't return error here because the order was already saved successfully
+            }
+
             res.json(updatedOrder);
         } else {
             res.status(404).json({ message: 'Order not found' });

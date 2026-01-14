@@ -15,9 +15,7 @@ const upiPaymentSchema = new Schema({
     },
     utr: {
         type: String,
-        required: false, // Made optional
-        trim: true,
-        sparse: true // Allows multiple null/undefined values, but unique when present
+        trim: true
     },
     amount: {
         type: Number,
@@ -53,7 +51,6 @@ const upiPaymentSchema = new Schema({
 
 // Index for faster queries
 upiPaymentSchema.index({ user: 1, status: 1 });
-upiPaymentSchema.index({ utr: 1 });
 
 const UpiPayment = mongoose.model('UpiPayment', upiPaymentSchema);
 module.exports = UpiPayment;

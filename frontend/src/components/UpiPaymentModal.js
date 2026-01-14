@@ -1,15 +1,17 @@
 // frontend/src/components/UpiPaymentModal.js
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, Upload, Button, message, Typography, Divider, Card, Space } from 'antd';
+import { Modal, Form, Input, Upload, Button, message, Typography, Divider, Card, Space, Grid } from 'antd';
 import { UploadOutlined, CopyOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
 const { Title, Text, Paragraph } = Typography;
+const { useBreakpoint } = Grid;
 
 const UpiPaymentModal = ({ visible, onClose, orderId, amount, onSuccess }) => {
     const [form] = Form.useForm();
     const { token } = useAuth();
+    const screens = useBreakpoint();
     const [loading, setLoading] = useState(false);
     const [fileList, setFileList] = useState([]);
     const [upiSettings, setUpiSettings] = useState({
@@ -51,7 +53,10 @@ const UpiPaymentModal = ({ visible, onClose, orderId, amount, onSuccess }) => {
         setLoading(true);
         const formData = new FormData();
         formData.append('orderId', orderId);
-        formData.append('utr', values.utr);
+        // Only append UTR if it has a value (optional field)
+        if (values.utr && values.utr.trim()) {
+            formData.append('utr', values.utr.trim());
+        }
         formData.append('amount', amount);
         formData.append('payeeName', values.payeeName || '');
         formData.append('screenshot', fileList[0].originFileObj);
@@ -113,27 +118,34 @@ const UpiPaymentModal = ({ visible, onClose, orderId, amount, onSuccess }) => {
 
     return (
         <Modal
-            title={<Title level={3}>Pay via UPI</Title>}
+            title={<Title level={3} style={{ margin: 0 }}>Pay via UPI</Title>}
             open={visible}
             onCancel={onClose}
             footer={null}
-            width={700}
+            width={screens.xs ? '100%' : screens.sm ? 550 : 700}
             style={{ top: 20 }}
+            centered={!screens.xs}
+            styles={{
+                body: { padding: screens.xs ? '16px' : '24px' }
+            }}
         >
             <Card
                 style={{
                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                     color: 'white',
-                    marginBottom: 24,
+                    marginBottom: screens.xs ? '16px' : '24px',
                     borderRadius: 12
                 }}
+                styles={{
+                    body: { padding: screens.xs ? '16px' : '24px' }
+                }}
             >
-                <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                <Space direction="vertical" size={screens.xs ? 'middle' : 'large'} style={{ width: '100%' }}>
                     <div style={{ textAlign: 'center' }}>
-                        <Title level={2} style={{ color: 'white', margin: 0 }}>
+                        <Title level={2} style={{ color: 'white', margin: 0, fontSize: screens.xs ? '28px' : undefined }}>
                             ₹{amount.toFixed(2)}
                         </Title>
-                        <Text style={{ color: 'rgba(255,255,255,0.9)' }}>Total Amount to Pay</Text>
+                        <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: screens.xs ? '14px' : undefined }}>Total Amount to Pay</Text>
                     </div>
 
                     <Divider style={{ borderColor: 'rgba(255,255,255,0.3)', margin: '12px 0' }} />
@@ -144,7 +156,7 @@ const UpiPaymentModal = ({ visible, onClose, orderId, amount, onSuccess }) => {
                         </Text>
                         <div style={{
                             background: 'white',
-                            padding: 16,
+                            padding: screens.xs ? '12px' : '16px',
                             borderRadius: 8,
                             textAlign: 'center',
                             marginBottom: 16
@@ -152,48 +164,58 @@ const UpiPaymentModal = ({ visible, onClose, orderId, amount, onSuccess }) => {
                             <img
                                 src={upiSettings.upiQrCodeUrl}
                                 alt="UPI QR Code"
-                                style={{ width: '200px', height: '200px' }}
+                                style={{
+                                    width: screens.xs ? '150px' : '200px',
+                                    height: screens.xs ? '150px' : '200px',
+                                    maxWidth: '100%'
+                                }}
                                 onError={(e) => {
                                     e.target.style.display = 'none';
                                     e.target.nextSibling.style.display = 'block';
                                 }}
                             />
-                            <div style={{ display: 'none', padding: 40, color: '#666' }}>
+                            <div style={{ display: 'none', padding: screens.xs ? '20px' : '40px', color: '#666' }}>
                                 QR Code Not Available
                             </div>
                         </div>
 
-                        <Text strong style={{ color: 'white', display: 'block', marginBottom: 8 }}>
+                        <Text strong style={{ color: 'white', display: 'block', marginBottom: screens.xs ? 8 : 12, fontSize: screens.xs ? '14px' : '16px' }}>
                             Or Pay to UPI ID:
                         </Text>
                         <div style={{
                             background: 'rgba(255,255,255,0.2)',
-                            padding: 12,
+                            padding: screens.xs ? '10px' : '12px',
                             borderRadius: 8,
                             display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
+                            flexDirection: screens.xs ? 'column' : 'row',
+                            gap: screens.xs ? '10px' : '0'
                         }}>
                             <Text code style={{
                                 background: 'transparent',
                                 color: 'white',
-                                fontSize: 16,
+                                fontSize: screens.xs ? '13px' : '15px',
                                 border: 'none',
-                                padding: 0
+                                padding: screens.xs ? '8px' : 0,
+                                wordBreak: 'break-all',
+                                flex: screens.xs ? 'unset' : 1,
+                                width: '100%',
+                                textAlign: 'center'
                             }}>
                                 {upiSettings.upiId}
                             </Text>
                             <Button
-                                icon={<CopyOutlined />}
+                                icon={screens.xs ? undefined : <CopyOutlined />}
                                 onClick={handleCopyUPI}
-                                size="small"
+                                size={screens.xs ? 'middle' : 'small'}
                                 style={{
                                     background: 'white',
                                     color: '#667eea',
-                                    border: 'none'
+                                    border: 'none',
+                                    width: screens.xs ? '100%' : 'auto',
+                                    minHeight: screens.xs ? 40 : undefined
                                 }}
                             >
-                                Copy
+                                {screens.xs ? 'Copy UPI ID' : 'Copy'}
                             </Button>
                         </div>
                     </div>
@@ -208,19 +230,30 @@ const UpiPaymentModal = ({ visible, onClose, orderId, amount, onSuccess }) => {
                     </Space>
                 }
                 style={{ borderRadius: 12 }}
+                styles={{
+                    body: { padding: screens.xs ? '16px' : '24px' }
+                }}
             >
                 <Form form={form} onFinish={handleSubmit} layout="vertical">
                     <Form.Item
                         name="utr"
                         label="UTR / Transaction ID (Optional)"
                         rules={[
-                            { min: 10, message: 'UTR must be at least 10 characters' }
+                            {
+                                validator: (_, value) => {
+                                    if (!value) return Promise.resolve();
+                                    if (value && value.length < 10) {
+                                        return Promise.reject('UTR must be at least 10 characters');
+                                    }
+                                    return Promise.resolve();
+                                }
+                            }
                         ]}
                         extra="12-digit unique transaction reference number from your payment app (if available)"
                     >
                         <Input
                             placeholder="e.g., 123456789012 (Optional)"
-                            size="large"
+                            size={screens.xs ? 'middle' : 'large'}
                             maxLength={20}
                         />
                     </Form.Item>
@@ -230,7 +263,7 @@ const UpiPaymentModal = ({ visible, onClose, orderId, amount, onSuccess }) => {
                         label="Your Name (as per payment app)"
                         extra="Optional - helps in verification"
                     >
-                        <Input placeholder="e.g., John Doe" size="large" />
+                        <Input placeholder="e.g., John Doe" size={screens.xs ? 'middle' : 'large'} />
                     </Form.Item>
 
                     <Form.Item
@@ -239,7 +272,7 @@ const UpiPaymentModal = ({ visible, onClose, orderId, amount, onSuccess }) => {
                         extra="Upload screenshot showing UTR, amount, and payment status"
                     >
                         <Upload {...uploadProps}>
-                            <Button icon={<UploadOutlined />} size="large" block>
+                            <Button icon={<UploadOutlined />} size={screens.xs ? 'middle' : 'large'} block>
                                 Click to Upload Screenshot
                             </Button>
                         </Upload>
@@ -247,7 +280,7 @@ const UpiPaymentModal = ({ visible, onClose, orderId, amount, onSuccess }) => {
 
                     <Divider />
 
-                    <Paragraph type="warning" style={{ fontSize: 12 }}>
+                    <Paragraph type="warning" style={{ fontSize: screens.xs ? 11 : 12, marginBottom: screens.xs ? '12px' : '16px' }}>
                         <strong>Important:</strong> Your order will be activated only after admin verification.
                         This usually takes 1-24 hours. You'll be notified once approved.
                     </Paragraph>
@@ -256,13 +289,13 @@ const UpiPaymentModal = ({ visible, onClose, orderId, amount, onSuccess }) => {
                         type="primary"
                         htmlType="submit"
                         loading={loading}
-                        size="large"
+                        size={screens.xs ? 'large' : 'large'}
                         block
                         style={{
                             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                             border: 'none',
-                            height: 48,
-                            fontSize: 16,
+                            height: screens.xs ? 44 : 48,
+                            fontSize: screens.xs ? 15 : 16,
                             fontWeight: 600
                         }}
                     >

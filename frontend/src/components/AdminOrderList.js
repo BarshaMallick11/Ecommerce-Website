@@ -103,6 +103,11 @@ const AdminOrderList = () => {
                                 <p><Text strong>User:</Text> {order.user ? order.user.username : 'N/A'}</p>
                                 <p><Text strong>Date:</Text> {moment(order.createdAt).format('YYYY-MM-DD')}</p>
                                 <p><Text strong>Total:</Text> ₹{order.totalAmount.toFixed(2)}</p>
+                                <p><Text strong>Payment Mode:</Text>
+                                    <Tag color={order.paymentMethod === 'COD' ? 'green' : 'blue'}>
+                                        {order.paymentMethod === 'COD' ? 'COD' : order.paymentMethod === 'UPI' ? 'UPI (Paid)' : order.paymentMethod}
+                                    </Tag>
+                                </p>
                                 <p><Text strong>Status:</Text> <StatusTag status={order.status} /></p>
                                 {order.trackingNumber && <p><Text strong>Tracking #:</Text> {order.trackingNumber}</p>}
                                 {order.estimatedDeliveryDate && <p><Text strong>Est. Delivery:</Text> {moment(order.estimatedDeliveryDate).format('YYYY-MM-DD')}</p>}

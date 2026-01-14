@@ -10,11 +10,13 @@ import { useAuth } from '../context/AuthContext';
 const { Text } = Typography;
 
 const Product = ({ product }) => {
-    const [quantity, setQuantity] = useState(1);
-    const [showControls, setShowControls] = useState(false);
-    const { addToCart } = useCart();
+    const { cartItems, addToCart, decreaseQuantity: decreaseCartQuantity } = useCart();
     const { user } = useAuth();
     const navigate = useNavigate();
+
+    // Find if this product is in the cart
+    const cartItem = cartItems.find(item => item._id === product._id);
+    const currentQuantity = cartItem ? cartItem.quantity : 0;
 
     const handlePlusClick = () => {
         if (!user) {
@@ -22,33 +24,15 @@ const Product = ({ product }) => {
             navigate('/login');
             return;
         }
-        setShowControls(true);
-    };
-
-    const handleAddToCart = () => {
-        if (user) {
-            for (let i = 0; i < quantity; i++) {
-                addToCart(product);
-            }
-            setQuantity(1);
-            setShowControls(false);
-        } else {
-            message.warning('Please log in to add items to your cart.');
-            navigate('/login');
-        }
+        addToCart(product);
     };
 
     const increaseQuantity = () => {
-        setQuantity(prev => prev + 1);
+        addToCart(product);
     };
 
     const decreaseQuantity = () => {
-        if (quantity > 1) {
-            setQuantity(prev => prev - 1);
-        } else {
-            setShowControls(false);
-            setQuantity(1);
-        }
+        decreaseCartQuantity(product._id);
     };
 
     return (
@@ -97,7 +81,7 @@ const Product = ({ product }) => {
                 {/* Plus Icon - Shows inline on desktop, separate on mobile */}
                 {!user?.isAdmin && (
                     <div className="plus-icon-wrapper">
-                        {!showControls ? (
+                        {currentQuantity === 0 ? (
                             // Plus Button
                             <Button
                                 icon={<PlusOutlined />}
@@ -146,7 +130,7 @@ const Product = ({ product }) => {
                                     }}
                                 />
                                 <Text strong style={{ fontSize: '12px', minWidth: '12px', textAlign: 'center' }}>
-                                    {quantity}
+                                    {currentQuantity}
                                 </Text>
                                 <Button
                                     icon={<PlusOutlined />}
@@ -204,36 +188,6 @@ const Product = ({ product }) => {
                 >
                     ₹{product.price.toFixed(0)}
                 </Text>
-
-                {/* Add to Cart Button */}
-                {!user?.isAdmin && (
-                    <div style={{
-                        opacity: showControls ? 1 : 0,
-                        visibility: showControls ? 'visible' : 'hidden',
-                        transition: 'opacity 0.3s ease, visibility 0.3s ease',
-                        pointerEvents: showControls ? 'auto' : 'none'
-                    }}>
-                        <Button
-                            type="primary"
-                            icon={<ShoppingCartOutlined />}
-                            onClick={handleAddToCart}
-                            size="small"
-                            style={{
-                                borderRadius: '6px',
-                                height: '32px',
-                                fontWeight: '500',
-                                fontSize: '12px',
-                                paddingLeft: '12px',
-                                paddingRight: '12px',
-                                whiteSpace: 'nowrap',
-                                backgroundColor: '#52c41a',
-                                border: 'none'
-                            }}
-                        >
-                            <span className="add-to-cart-text">Add to Cart</span>
-                        </Button>
-                    </div>
-                )}
             </div>
         </Card>
     );

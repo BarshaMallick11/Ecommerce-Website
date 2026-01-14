@@ -32,6 +32,7 @@ import ForgotPasswordPage from './components/ForgotPasswordPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import AdminPincodeManager from './components/AdminPincodeManager';
 import AdminUpiPayments from './components/AdminUpiPayments';
+import PaymentPage from './components/PaymentPage';
 const { Header, Content, Footer } = Layout;
 const { Title } = Typography;
 
@@ -162,6 +163,7 @@ function App() {
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
                     <Route path="/track-order" element={<TrackOrderPage />} />
+                    <Route path="/payment" element={<PaymentPage />} />
                     <Route path="/help" element={<HelpPage />} />
                     <Route path="/cart" element={<CartPage />} />
 

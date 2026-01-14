@@ -88,10 +88,13 @@ router.post('/submit', protect, (req, res, next) => {
         }
 
         // Check if UTR is already used (fraud protection) - only if UTR is provided
-        if (utr && utr.trim()) {
-            const duplicateUTR = await UpiPayment.findOne({ utr: utr.trim() });
+        const utrValue = (utr && utr.trim() && utr.trim().length > 0) ? utr.trim() : undefined;
+        console.log('UTR value for validation:', utrValue);
+
+        if (utrValue) {
+            const duplicateUTR = await UpiPayment.findOne({ utr: utrValue });
             if (duplicateUTR) {
-                console.log('Duplicate UTR:', utr);
+                console.log('Duplicate UTR found:', utrValue);
                 return res.status(400).json({ message: 'This UTR has already been used' });
             }
         }
@@ -110,10 +113,15 @@ router.post('/submit', protect, (req, res, next) => {
 
         // Verify amount matches order total
         const submittedAmount = parseFloat(amount);
-        console.log('Amount comparison:', { submitted: submittedAmount, order: order.totalAmount });
-        if (submittedAmount !== order.totalAmount) {
+        const orderTotal = parseFloat(order.totalAmount);
+
+        console.log('Amount comparison raw:', { amount, order_total: order.totalAmount });
+        console.log('Amount comparison parsed:', { submitted: submittedAmount, order: orderTotal });
+
+        if (Math.abs(submittedAmount - orderTotal) > 0.01) {
+            console.log('Amount mismatch failed:', { diff: Math.abs(submittedAmount - orderTotal) });
             return res.status(400).json({
-                message: `Amount mismatch. Expected ₹${order.totalAmount}, received ₹${amount}`
+                message: `Amount mismatch. Expected ₹${orderTotal.toFixed(2)}, received ₹${submittedAmount.toFixed(2)}`
             });
         }
 
@@ -121,7 +129,7 @@ router.post('/submit', protect, (req, res, next) => {
         const paymentProof = new UpiPayment({
             user: req.user._id,
             orderId,
-            utr: utr && utr.trim() ? utr.trim() : undefined, // Only set if provided
+            ...(utrValue && { utr: utrValue }),
             amount: submittedAmount,
             paymentScreenshot: req.file.path,
             payeeName: payeeName || '',
@@ -145,8 +153,16 @@ router.post('/submit', protect, (req, res, next) => {
         console.error('Error code:', error.code);
 
         if (error.code === 11000) {
-            return res.status(400).json({ message: 'Duplicate UTR number' });
+            if (error.keyPattern?.utr) {
+                return res.status(400).json({
+                message: 'Duplicate UTR number'
+            });
         }
+
+  return res.status(400).json({
+    message: 'Duplicate payment record'
+  });
+}
         res.status(500).json({
             message: 'Failed to submit payment proof',
             error: error.message
@@ -228,7 +244,7 @@ router.put('/:id/approve', protect, admin, async (req, res) => {
         // Update the order payment status
         const order = await Order.findById(payment.orderId);
         if (order) {
-            order.paymentId = `UPI-${payment.utr}`;
+            order.paymentId = payment.utr ? `UPI-${payment.utr}` : `UPI-${payment._id}`;
             await order.save();
         }
 

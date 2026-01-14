@@ -12,9 +12,11 @@ import {
     Card,
     Descriptions,
     Typography,
-    Tabs
+    Tabs,
+    Grid
 } from 'antd';
 import {
+    ArrowLeftOutlined,
     CheckOutlined,
     CloseOutlined,
     EyeOutlined,
@@ -28,8 +30,10 @@ import { useAuth } from '../context/AuthContext';
 const { TextArea } = Input;
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
+const { useBreakpoint } = Grid;
 
 const AdminUpiPayments = () => {
+    const screens = useBreakpoint();
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(false);
     const [detailModalVisible, setDetailModalVisible] = useState(false);
@@ -113,7 +117,8 @@ const AdminUpiPayments = () => {
             dataIndex: 'createdAt',
             key: 'createdAt',
             render: (date) => new Date(date).toLocaleString(),
-            width: 180,
+            width: screens.xs ? 120 : 180,
+            responsive: ['sm', 'md', 'lg', 'xl', 'xxl'],
         },
         {
             title: 'User',
@@ -125,12 +130,14 @@ const AdminUpiPayments = () => {
                     <Text type="secondary" style={{ fontSize: 12 }}>{user?.email}</Text>
                 </div>
             ),
+            responsive: ['sm', 'md', 'lg', 'xl', 'xxl'],
         },
         {
             title: 'UTR',
             dataIndex: 'utr',
             key: 'utr',
             render: (utr) => <Text code>{utr}</Text>,
+            ellipsis: true,
         },
         {
             title: 'Amount',
@@ -152,23 +159,25 @@ const AdminUpiPayments = () => {
                 <Image
                     src={url}
                     alt="Payment Screenshot"
-                    width={60}
-                    height={60}
+                    width={screens.xs ? 40 : 60}
+                    height={screens.xs ? 40 : 60}
                     style={{ objectFit: 'cover', borderRadius: 4 }}
                 />
             ),
+            responsive: ['md', 'lg', 'xl', 'xxl'],
         },
         {
             title: 'Actions',
             key: 'actions',
             render: (_, record) => (
-                <Space>
+                <Space direction={screens.xs ? 'vertical' : 'horizontal'} size="small">
                     <Button
                         icon={<EyeOutlined />}
                         onClick={() => showDetailModal(record)}
                         size="small"
+                        block={screens.xs}
                     >
-                        View
+                        {screens.xs ? '' : 'View'}
                     </Button>
                     {record.status === 'pending' && (
                         <>
@@ -177,55 +186,67 @@ const AdminUpiPayments = () => {
                                 type="primary"
                                 onClick={() => showVerifyModal(record, 'approve')}
                                 size="small"
+                                block={screens.xs}
                             >
-                                Approve
+                                {screens.xs ? '' : 'Approve'}
                             </Button>
                             <Button
                                 icon={<CloseOutlined />}
                                 danger
                                 onClick={() => showVerifyModal(record, 'reject')}
                                 size="small"
+                                block={screens.xs}
                             >
-                                Reject
+                                {screens.xs ? '' : 'Reject'}
                             </Button>
                         </>
                     )}
                 </Space>
             ),
             fixed: 'right',
-            width: 250,
+            width: screens.xs ? 160 : 250,
         },
     ];
 
     return (
-        <div>
-            <Title level={2}>UPI Payment Verifications</Title>
+        <div style={{ padding: screens.xs ? '12px' : '24px' }}>
+            {/* Back Button */}
+            <Button
+                icon={<ArrowLeftOutlined />}
+                onClick={() => window.history.back()}
+                style={{ marginBottom: 16 }}
+                size={screens.xs ? 'middle' : 'default'}
+            >
+                {screens.xs ? 'Back' : 'Back to Admin Panel'}
+            </Button>
 
-            <Card style={{ marginBottom: 24 }}>
-                <Tabs activeKey={activeTab} onChange={setActiveTab}>
+            <Title level={2} style={{ fontSize: screens.xs ? '20px' : undefined }}>UPI Payment Verifications</Title>
+
+            <Card style={{ marginBottom: 24 }} styles={{ body: { padding: screens.xs ? '12px' : '24px' } }}>
+                <Tabs activeKey={activeTab} onChange={setActiveTab} size={screens.xs ? 'small' : 'default'}>
                     <TabPane
                         tab={
-                            <span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                 <ClockCircleOutlined />
-                                Pending
+                                <span>{screens.xs ? 'Pending' : 'Pending'}</span>
                             </span>
                         }
                         key="pending"
                     />
                     <TabPane
                         tab={
-                            <span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                 <CheckCircleOutlined />
-                                Approved
+                                <span>Approved</span>
                             </span>
                         }
                         key="approved"
                     />
                     <TabPane
                         tab={
-                            <span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                 <CloseCircleOutlined />
-                                Rejected
+                                <span>Rejected</span>
                             </span>
                         }
                         key="rejected"
@@ -238,8 +259,31 @@ const AdminUpiPayments = () => {
                 dataSource={payments}
                 rowKey="_id"
                 loading={loading}
-                scroll={{ x: 1200 }}
-                pagination={{ pageSize: 10 }}
+                scroll={{ x: screens.xs ? 600 : 1200 }}
+                pagination={{
+                    pageSize: 10,
+                    size: screens.xs ? 'small' : 'default',
+                    simple: screens.xs
+                }}
+                size={screens.xs ? 'small' : 'middle'}
+                expandable={{
+                    expandedRowRender: (record) => (
+                        <div style={{ padding: '12px' }}>
+                            <Descriptions column={1} size="small" bordered>
+                                <Descriptions.Item label="Date">
+                                    {new Date(record.createdAt).toLocaleString()}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="User">
+                                    {record.user?.username} ({record.user?.email})
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Order Total">
+                                    ₹{record.orderId?.totalAmount?.toFixed(2)}
+                                </Descriptions.Item>
+                            </Descriptions>
+                        </div>
+                    ),
+                    rowExpandable: (record) => true,
+                }}
             />
 
             {/* Detail Modal */}
@@ -248,19 +292,23 @@ const AdminUpiPayments = () => {
                 open={detailModalVisible}
                 onCancel={() => setDetailModalVisible(false)}
                 footer={null}
-                width={700}
+                width={screens.xs ? '100%' : 700}
+                centered
+                styles={{
+                    body: { padding: screens.xs ? '16px' : '24px' }
+                }}
             >
                 {selectedPayment && (
                     <div>
-                        <Descriptions bordered column={2}>
-                            <Descriptions.Item label="Status" span={2}>
+                        <Descriptions bordered column={screens.xs ? 1 : 2} size={screens.xs ? 'small' : 'default'}>
+                            <Descriptions.Item label="Status" span={screens.xs ? 1 : 2}>
                                 {getStatusTag(selectedPayment.status)}
                             </Descriptions.Item>
                             <Descriptions.Item label="User">
                                 {selectedPayment.user?.username}
                             </Descriptions.Item>
                             <Descriptions.Item label="Email">
-                                {selectedPayment.user?.email}
+                                <Text style={{ fontSize: screens.xs ? '12px' : undefined }}>{selectedPayment.user?.email}</Text>
                             </Descriptions.Item>
                             <Descriptions.Item label="UTR">
                                 <Text code>{selectedPayment.utr}</Text>
@@ -291,7 +339,7 @@ const AdminUpiPayments = () => {
                                 </>
                             )}
                             {selectedPayment.verificationNote && (
-                                <Descriptions.Item label="Note" span={2}>
+                                <Descriptions.Item label="Note" span={screens.xs ? 1 : 2}>
                                     {selectedPayment.verificationNote}
                                 </Descriptions.Item>
                             )}
@@ -321,9 +369,14 @@ const AdminUpiPayments = () => {
                     setVerificationNote('');
                 }}
                 okText={actionType === 'approve' ? 'Approve' : 'Reject'}
+                width={screens.xs ? '100%' : 500}
+                centered
                 okButtonProps={{
                     danger: actionType === 'reject',
                     type: actionType === 'approve' ? 'primary' : 'default'
+                }}
+                styles={{
+                    body: { padding: screens.xs ? '16px' : '24px' }
                 }}
             >
                 {selectedPayment && (
@@ -343,7 +396,7 @@ const AdminUpiPayments = () => {
                         <div>
                             <Text strong>Verification Note (Optional)</Text>
                             <TextArea
-                                rows={3}
+                                rows={screens.xs ? 3 : 3}
                                 value={verificationNote}
                                 onChange={(e) => setVerificationNote(e.target.value)}
                                 placeholder="Add a note about this verification..."
