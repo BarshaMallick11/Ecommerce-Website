@@ -4,7 +4,7 @@ const Order = require('../models/order.model');
 const UpiPayment = require('../models/upiPayment.model');
 const { protect, admin } = require('../middleware/authMiddleware');
 const { sendStatusUpdateEmail } = require('../utils/emailService');
-const { sendStatusUpdateSMS } = require('../utils/smsService');
+// const { sendStatusUpdateSMS } = require('../utils/smsService'); // Disabled SMS
 
 // @desc   Get all orders
 // @route  GET /api/orders/all
@@ -76,6 +76,7 @@ router.put('/:id/status', protect, admin, async (req, res) => {
                         console.log(`Email notification sent to ${populatedOrder.user.email}`);
                     }
 
+                    /* SMS Disabled - Not using Fast2SMS
                     // Send SMS (if phone number is available)
                     if (populatedOrder.shippingAddress && populatedOrder.shippingAddress.phoneNo) {
                         const smsSent = await sendStatusUpdateSMS(
@@ -87,6 +88,7 @@ router.put('/:id/status', protect, admin, async (req, res) => {
                             console.log(`SMS notification sent to ${populatedOrder.shippingAddress.phoneNo}`);
                         }
                     }
+                    */
                 }
             } catch (notificationError) {
                 console.error('Failed to send notifications:', notificationError);

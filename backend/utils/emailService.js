@@ -10,11 +10,19 @@ const sendStatusUpdateEmail = async (order, user) => {
         }
 
         const transporter = nodemailer.createTransport({
-            service: 'gmail',
+            host: 'smtp.gmail.com',
+            port: 587, // Try port 587 instead of 465
+            secure: false, // Use STARTTLS instead of SSL
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS
-            }
+            },
+            tls: {
+                rejectUnauthorized: false // Allow self-signed certificates
+            },
+            connectionTimeout: 10000, // 10 seconds connection timeout
+            greetingTimeout: 10000, // 10 seconds greeting timeout
+            socketTimeout: 15000 // 15 seconds socket timeout
         });
 
         // Status-specific messages
@@ -112,11 +120,28 @@ const sendStatusUpdateEmail = async (order, user) => {
                 </html>
             `
         };
+        // Retry logic - try up to 2 times
+        let lastError;
+        for (let attempt = 1; attempt <= 2; attempt++) {
+            try {
+                console.log(`[Attempt ${attempt}/2] Sending email...`);
+                const info = await transporter.sendMail(mailOptions);
+                console.log('Email sent successfully:', info.messageId);
+                return true;
+            } catch (err) {
+                lastError = err;
+                console.error(`[Attempt ${attempt}/2] Failed:`, err.message);
 
-        const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent successfully:', info.messageId);
-        return true;
-    } catch (error) {
+                // Wait 2 seconds before retry
+                if (attempt < 2) {
+                    console.log('Retrying in 2 seconds...');
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+            }
+        }
+
+        // All retries failed
+        const error = lastError;
         console.error('Critical Error in Email Service:');
         console.error('- Message:', error.message);
         console.error('- Order ID:', order._id);
@@ -128,6 +153,10 @@ const sendStatusUpdateEmail = async (order, user) => {
         } else if (error.code === 'ETIMEDOUT') {
             console.error('- Timeout Error: Check internet connection');
         }
+        return false;
+    } catch (error) {
+        // Catch any unexpected errors outside the retry loop
+        console.error('Unexpected Error in Email Service:', error.message);
         return false;
     }
 };
