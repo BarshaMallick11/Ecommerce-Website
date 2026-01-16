@@ -18,7 +18,6 @@ import {
     Spin
 } from 'antd';
 import {
-    ArrowLeftOutlined,
     CheckOutlined,
     CloseOutlined,
     EyeOutlined,
@@ -31,6 +30,7 @@ import {
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import AdminNav from './AdminNav';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -304,17 +304,10 @@ const AdminUpiPayments = () => {
 
     return (
         <div style={{ padding: screens.xs ? '12px' : '24px' }}>
-            {/* Back Button */}
-            <Button
-                icon={<ArrowLeftOutlined />}
-                onClick={() => window.history.back()}
-                style={{ marginBottom: 16 }}
-                size={screens.xs ? 'middle' : 'default'}
-            >
-                {screens.xs ? 'Back' : 'Back to Admin Panel'}
-            </Button>
+            <Title level={2}>Admin Dashboard</Title>
+            <AdminNav />
 
-            <Title level={2} style={{ fontSize: screens.xs ? '20px' : undefined }}>UPI Payment Verifications</Title>
+            <Title level={4} style={{ marginTop: '24px' }}>UPI Payment Verifications</Title>
 
             <Card style={{ marginBottom: 24 }} styles={{ body: { padding: screens.xs ? '12px' : '24px' } }}>
                 <Tabs activeKey={activeTab} onChange={setActiveTab} size={screens.xs ? 'small' : 'default'}>

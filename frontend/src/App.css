@@ -504,6 +504,57 @@
     color: #10b981;
   }
 
+  /* Mobile Search Autocomplete Suggestions */
+  .mobile-search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 0 0 16px 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: -8px;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .mobile-search-suggestion-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .mobile-search-suggestion-item:last-child {
+    border-bottom: none;
+  }
+
+  .mobile-search-suggestion-item:active {
+    background-color: #f9fafb;
+  }
+
+  .mobile-search-suggestion-item .suggestion-icon {
+    width: 16px;
+    height: 16px;
+    color: #9ca3af;
+    flex-shrink: 0;
+  }
+
+  .mobile-search-suggestion-item span {
+    font-size: 14px;
+    color: #374151;
+    flex: 1;
+  }
+
+  .mobile-search-bar {
+    position: relative;
+  }
+
   /* Filter & Sort Buttons Row */
   .mobile-filter-sort {
     display: flex;
@@ -714,7 +765,7 @@
     display: block !important;
     /* SHOW IT */
     position: absolute !important;
-    right: -47px !important;
+    right: -40px !important;
     /* Position outside the header, align to card edge */
     top: 50% !important;
     transform: translateY(-50%) !important;
@@ -763,9 +814,9 @@
     width: 32px !important;
     height: 32px !important;
     min-width: 32px !important;
-    background: #10b981 !important;
+    background: #4F772D !important;
     border: none !important;
-    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4) !important;
+    box-shadow: 0 2px 6px rgba(3, 71, 48, 0.4) !important;
     z-index: 11 !important;
   }
 
@@ -783,7 +834,7 @@
   /* QUANTITY CONTROLS - GREEN PILL - COMPACT 32px */
   .product-list-container .plus-icon-wrapper>div {
     position: relative !important;
-    background: #10b981 !important;
+    background: #50a055 !important;
     border: none !important;
     border-radius: 16px !important;
     padding: 3px 6px !important;

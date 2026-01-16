@@ -29,7 +29,18 @@ const ProductEditModal = ({ visible, onCancel, onFinish, initialValues }) => {
 
     useEffect(() => {
         if (initialValues) {
-            form.setFieldsValue(initialValues);
+            // Set all form fields with explicit values
+            form.setFieldsValue({
+                name: initialValues.name,
+                description: initialValues.description,
+                category: initialValues.category?._id || initialValues.category,
+                price: initialValues.price,
+                quantity: initialValues.quantity,
+                stock: initialValues.stock || 0,
+                unit: initialValues.unit || 'Kg',
+                discount: initialValues.discount || 0
+            });
+
             // Set main image preview
             setMainImagePreview(initialValues.image);
             setMainImageFile(null);
@@ -208,6 +219,15 @@ const ProductEditModal = ({ visible, onCancel, onFinish, initialValues }) => {
                     rules={[{ required: true, message: 'Please input the quantity!' }]}
                 >
                     <InputNumber min={0} step={1} style={{ width: '100%' }} size="large" placeholder="e.g., 50" />
+                </Form.Item>
+
+                <Form.Item
+                    name="stock"
+                    label="Available Stock"
+                    rules={[{ required: true, message: 'Please input the stock!' }]}
+                    extra="Number of units available for purchase (0 = Out of Stock)"
+                >
+                    <InputNumber min={0} step={1} style={{ width: '100%' }} size="large" placeholder="e.g., 100" />
                 </Form.Item>
 
                 <Form.Item

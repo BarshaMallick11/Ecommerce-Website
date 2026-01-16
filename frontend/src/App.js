@@ -54,7 +54,6 @@ const AppHeader = () => {
     ] : []),
     // Conditionally add item for admins
     ...(user?.isAdmin ? [{ key: '4', label: <Link to="/admin">Admin Panel</Link> }] : []),
-    { key: '5', label: <Link to="/payment">UPI Payment</Link> },
     { key: '6', label: <Link to="/help">Help & Contact</Link> },
     { key: '7', label: <div onClick={logout}>Logout</div> },
   ];

@@ -19,7 +19,7 @@ const ProductPage = () => {
     const [selectedImage, setSelectedImage] = useState(null); // For image gallery
     const [previewVisible, setPreviewVisible] = useState(false); // For image preview modal
     const { id } = useParams();
-    const { addToCart } = useCart();
+    const { addToCart, cartItems } = useCart();
     const { user } = useAuth();
 
     // Combine main image and additional images
@@ -45,8 +45,20 @@ const ProductPage = () => {
         fetchProduct();
     }, [fetchProduct]);
 
+    // Stock management - check current cart quantity
+    const cartItem = cartItems.find(item => item._id === id);
+    const currentCartQuantity = cartItem ? cartItem.quantity : 0;
+    const availableStock = product?.stock || 0;
+    const isOutOfStock = availableStock === 0;
+    const canIncreaseQuantity = (quantity + currentCartQuantity) < availableStock;
+
     const increaseQuantity = () => {
-        setQuantity(prev => prev + 1);
+        if (canIncreaseQuantity) {
+            setQuantity(prev => prev + 1);
+        } else {
+            const remainingStock = availableStock - currentCartQuantity;
+            message.warning(`Limited stock! Only ${availableStock} units available total (${currentCartQuantity} already in cart).`);
+        }
     };
 
     const decreaseQuantity = () => {
@@ -80,11 +92,32 @@ const ProductPage = () => {
     };
 
     const handleAddToCart = () => {
-        if (user) {
-            for (let i = 0; i < quantity; i++) {
-                addToCart(product);
-            }
+        if (!user) {
+            message.warning('Please log in to add items to cart');
+            return;
         }
+
+        if (isOutOfStock) {
+            message.error('This product is out of stock');
+            return;
+        }
+
+        // Check if adding this quantity would exceed stock
+        const totalQuantity = currentCartQuantity + quantity;
+        if (totalQuantity > availableStock) {
+            const remainingStock = availableStock - currentCartQuantity;
+            if (remainingStock > 0) {
+                message.warning(`Only ${remainingStock} more units can be added. You already have ${currentCartQuantity} in cart.`);
+            } else {
+                message.warning(`You already have the maximum stock (${availableStock} units) in your cart.`);
+            }
+            return;
+        }
+
+        for (let i = 0; i < quantity; i++) {
+            addToCart(product);
+        }
+        message.success(`${quantity} item(s) added to cart!`);
     };
 
     if (loading) {
@@ -239,6 +272,16 @@ const ProductPage = () => {
                                 {product.description || 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'}
                             </Paragraph>
 
+                            {/* Stock Status */}
+                            <div style={{ marginTop: '16px' }}>
+                                <Text strong>Stock: </Text>
+                                {isOutOfStock ? (
+                                    <Tag color="red">Out of Stock</Tag>
+                                ) : (
+                                    <Tag color="green">{availableStock} units available</Tag>
+                                )}
+                            </div>
+
                             {/* Quantity and Add to Cart */}
                             {!user?.isAdmin && (
                                 <div style={{ marginTop: '32px' }}>
@@ -272,10 +315,14 @@ const ProductPage = () => {
                                             <Button
                                                 icon={<PlusOutlined />}
                                                 onClick={increaseQuantity}
+                                                disabled={!canIncreaseQuantity || isOutOfStock}
                                                 style={{
                                                     border: 'none',
                                                     width: '40px',
-                                                    height: '40px'
+                                                    height: '40px',
+                                                    color: (canIncreaseQuantity && !isOutOfStock) ? '#1890ff' : '#d9d9d9',
+                                                    cursor: (canIncreaseQuantity && !isOutOfStock) ? 'pointer' : 'not-allowed',
+                                                    opacity: (canIncreaseQuantity && !isOutOfStock) ? 1 : 0.5
                                                 }}
                                             />
                                         </div>

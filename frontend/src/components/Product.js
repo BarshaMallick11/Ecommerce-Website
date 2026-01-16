@@ -18,16 +18,36 @@ const Product = ({ product }) => {
     const cartItem = cartItems.find(item => item._id === product._id);
     const currentQuantity = cartItem ? cartItem.quantity : 0;
 
+    // Stock management
+    const availableStock = product.stock || 0;
+    const isOutOfStock = availableStock === 0;
+    const canAddMore = currentQuantity < availableStock;
+
     const handlePlusClick = () => {
         if (!user) {
             message.warning('Please log in to add items to your cart.');
             navigate('/login');
             return;
         }
+
+        if (isOutOfStock) {
+            message.error('This product is out of stock');
+            return;
+        }
+
+        if (!canAddMore) {
+            message.warning(`Only ${availableStock} units available. You already have ${currentQuantity} in cart.`);
+            return;
+        }
+
         addToCart(product);
     };
 
     const increaseQuantity = () => {
+        if (!canAddMore) {
+            message.warning(`Limited stock! Only ${availableStock} units available.`);
+            return;
+        }
         addToCart(product);
     };
 
@@ -160,10 +180,25 @@ const Product = ({ product }) => {
                     </div>
                 )}
 
-                {/* Plus Icon - Shows inline on desktop, separate on mobile */}
+                {/* Plus Icon / Out of Stock - Shows inline on desktop, separate on mobile */}
                 {!user?.isAdmin && (
                     <div className="plus-icon-wrapper">
-                        {currentQuantity === 0 ? (
+                        {isOutOfStock ? (
+                            // Out of Stock Text
+                            <div style={{
+                                backgroundColor: '#fff1f0',
+                                color: '#bf1725ff',
+                                padding: '9px 12px',
+                                borderRadius: '16px',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                fontStyle: 'italic',
+                                border: '1px solid #ffccc7',
+                                whiteSpace: 'nowrap'
+                            }}>
+                                Out of Stock
+                            </div>
+                        ) : currentQuantity === 0 ? (
                             // Plus Button
                             <Button
                                 icon={<PlusOutlined />}
@@ -220,14 +255,17 @@ const Product = ({ product }) => {
                                     onClick={increaseQuantity}
                                     size="small"
                                     shape="circle"
+                                    disabled={!canAddMore}
                                     style={{
                                         border: 'none',
-                                        color: '#1890ff',
+                                        color: canAddMore ? '#1890ff' : '#d9d9d9',
                                         fontSize: '10px',
                                         width: '20px',
                                         height: '20px',
                                         minWidth: '20px',
-                                        padding: 0
+                                        padding: 0,
+                                        cursor: canAddMore ? 'pointer' : 'not-allowed',
+                                        opacity: canAddMore ? 1 : 0.5
                                     }}
                                 />
                             </div>

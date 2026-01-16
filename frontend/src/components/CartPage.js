@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import BackButton from './BackButton';
-import { List, Button, Typography, Row, Col, Empty, Space, Avatar, Tooltip, Tag, Card, Divider } from 'antd';
+import { List, Button, Typography, Row, Col, Empty, Space, Avatar, Tooltip, Tag, Card, Divider, message } from 'antd';
 import { DeleteOutlined, PlusOutlined, MinusOutlined, EditOutlined, CarOutlined, GiftOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
@@ -75,6 +75,18 @@ const CartPage = () => {
                     const itemTotal = discountedPrice * item.quantity;
                     const originalTotal = item.price * item.quantity;
 
+                    // Stock validation
+                    const availableStock = item.stock || 0;
+                    const canAddMore = item.quantity < availableStock;
+
+                    const handleAddToCart = () => {
+                        if (canAddMore) {
+                            addToCart(item);
+                        } else {
+                            message.warning(`Limited stock! Only ${availableStock} units available.`);
+                        }
+                    };
+
                     return (
                         <List.Item
                             className="cart-item-responsive"
@@ -121,7 +133,19 @@ const CartPage = () => {
                                     <Space>
                                         <Button size="small" shape="circle" icon={<MinusOutlined />} onClick={() => decreaseQuantity(item._id)} />
                                         <Text strong>{item.quantity}</Text>
-                                        <Button size="small" shape="circle" icon={<PlusOutlined />} onClick={() => addToCart(item)} />
+                                        <Button
+                                            size="small"
+                                            shape="circle"
+                                            icon={<PlusOutlined />}
+                                            onClick={handleAddToCart}
+                                            disabled={!canAddMore}
+                                            style={{
+                                                color: canAddMore ? '#1890ff' : '#d9d9d9',
+                                                borderColor: canAddMore ? '#1890ff' : '#d9d9d9',
+                                                cursor: canAddMore ? 'pointer' : 'not-allowed',
+                                                opacity: canAddMore ? 1 : 0.5
+                                            }}
+                                        />
                                     </Space>
                                 </Col>
 

@@ -60,6 +60,7 @@ const AdminDashboard = () => {
             formData.append('description', values.description);
             formData.append('price', values.price);
             formData.append('quantity', values.quantity || 0);
+            formData.append('stock', values.stock || 0);
             formData.append('unit', values.unit || 'Kg');
             formData.append('discount', values.discount || 0);
             if (values.category) {
@@ -120,6 +121,7 @@ const AdminDashboard = () => {
         { title: 'Name', dataIndex: 'name', key: 'name' },
         { title: 'Price', dataIndex: 'price', key: 'price', render: (price) => `₹${price.toFixed(2)}` },
         { title: 'Quantity', dataIndex: 'quantity', key: 'quantity', render: (quantity) => quantity || 0 },
+        { title: 'Stock', dataIndex: 'stock', key: 'stock', render: (stock) => stock || 0 },
         {
             title: 'Discount',
             dataIndex: 'discount',

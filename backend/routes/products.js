@@ -103,7 +103,7 @@ router.get('/autocomplete', async (req, res) => {
                 }
             }
         ]);
-        res.json(suggestions.map(s => ({ value: s.name }))); // Format for Ant Design
+        res.json(suggestions.map(s => ({ value: s.name, label: s.name }))); // Format for both desktop and mobile
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });
     }
@@ -142,7 +142,7 @@ router.post('/', protect, admin, upload.fields([
         console.log('Unit received:', req.body.unit);
         console.log('Category received:', req.body.category);
 
-        const { name, price, description, quantity, discount, unit, category } = req.body;
+        const { name, price, description, quantity, stock, discount, unit, category } = req.body;
 
         // Check if main image file was uploaded
         if (!req.files || !req.files.image) {
@@ -186,6 +186,7 @@ router.post('/', protect, admin, upload.fields([
             description,
             category: category || null,
             quantity: Number(quantity) || 0,
+            stock: Number(stock) || 0,
             unit: unit || 'Kg',
             discount: Number(discount) || 0,
             image: mainImageResult.secure_url,
@@ -210,7 +211,7 @@ router.put('/:id', protect, admin, upload.fields([
     { name: 'additionalImages', maxCount: 5 }
 ]), async (req, res) => {
     try {
-        const { name, price, description, quantity, discount, unit, category, existingImages } = req.body;
+        const { name, price, description, quantity, stock, discount, unit, category, existingImages } = req.body;
         const product = await Product.findById(req.params.id);
 
         if (product) {
@@ -219,6 +220,7 @@ router.put('/:id', protect, admin, upload.fields([
             product.description = description;
             product.category = category || product.category;
             product.quantity = quantity !== undefined ? Number(quantity) : product.quantity;
+            product.stock = stock !== undefined ? Number(stock) : product.stock;
             product.unit = unit || product.unit;
             product.discount = discount !== undefined ? Number(discount) : product.discount;
 

@@ -32,6 +32,7 @@ const productSchema = new Schema({
     required: false // Making it optional for backward compatibility
   },
   quantity: { type: Number, default: 0 }, // Stock quantity
+  stock: { type: Number, default: 0 }, // Available stock count
   unit: { type: String, enum: ['gm', 'Kg', 'L'], default: 'Kg' }, // Unit of measurement
   discount: { type: Number, default: 0, min: 0, max: 100 }, // Discount percentage (0-100)
   reviews: [reviewSchema],

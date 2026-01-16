@@ -48,6 +48,36 @@ router.post('/verify-payment', async (req, res) => {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             const userId = decoded.id;
 
+            // Import Product model for stock validation
+            const Product = require('../models/product.model');
+
+            // Validate stock availability for all items
+            for (const item of cartItems) {
+                const product = await Product.findById(item._id);
+                if (!product) {
+                    return res.status(400).json({
+                        status: 'failure',
+                        message: `Product ${item.name} not found.`
+                    });
+                }
+
+                if (product.stock < item.quantity) {
+                    return res.status(400).json({
+                        status: 'failure',
+                        message: `Insufficient stock for ${product.name}. Only ${product.stock} units available.`
+                    });
+                }
+            }
+
+            // Deduct stock for all items atomically
+            for (const item of cartItems) {
+                await Product.findByIdAndUpdate(
+                    item._id,
+                    { $inc: { stock: -item.quantity } },
+                    { new: true }
+                );
+            }
+
             const newOrder = new Order({
                 user: userId,
                 products: cartItems.map(item => ({ product: item, quantity: item.quantity })),
@@ -60,6 +90,7 @@ router.post('/verify-payment', async (req, res) => {
             await newOrder.save();
             res.json({ status: 'success', orderId: newOrder._id });
         } catch (error) {
+            console.error('Order creation error:', error);
             res.status(500).json({ status: 'failure', message: 'Could not save order.' });
         }
     } else {
@@ -74,6 +105,35 @@ router.post('/cod-order', protect, async (req, res) => {
     const { cartItems, totalAmount, shippingAddress } = req.body;
 
     try {
+        const Product = require('../models/product.model');
+
+        // Validate stock availability for all items
+        for (const item of cartItems) {
+            const product = await Product.findById(item._id);
+            if (!product) {
+                return res.status(400).json({
+                    status: 'failure',
+                    message: `Product ${item.name} not found.`
+                });
+            }
+
+            if (product.stock < item.quantity) {
+                return res.status(400).json({
+                    status: 'failure',
+                    message: `Insufficient stock for ${product.name}. Only ${product.stock} units available.`
+                });
+            }
+        }
+
+        // Deduct stock for all items atomically
+        for (const item of cartItems) {
+            await Product.findByIdAndUpdate(
+                item._id,
+                { $inc: { stock: -item.quantity } },
+                { new: true }
+            );
+        }
+
         const newOrder = new Order({
             user: req.user._id,
             products: cartItems.map(item => ({ product: item, quantity: item.quantity })),
@@ -86,6 +146,7 @@ router.post('/cod-order', protect, async (req, res) => {
         const savedOrder = await newOrder.save();
         res.status(201).json({ status: 'success', orderId: savedOrder._id });
     } catch (error) {
+        console.error('COD order error:', error);
         res.status(500).json({ status: 'failure', message: 'Could not place order.' });
     }
 });
@@ -97,6 +158,35 @@ router.post('/upi-order', protect, async (req, res) => {
     const { cartItems, totalAmount, shippingAddress } = req.body;
 
     try {
+        const Product = require('../models/product.model');
+
+        // Validate stock availability for all items
+        for (const item of cartItems) {
+            const product = await Product.findById(item._id);
+            if (!product) {
+                return res.status(400).json({
+                    status: 'failure',
+                    message: `Product ${item.name} not found.`
+                });
+            }
+
+            if (product.stock < item.quantity) {
+                return res.status(400).json({
+                    status: 'failure',
+                    message: `Insufficient stock for ${product.name}. Only ${product.stock} units available.`
+                });
+            }
+        }
+
+        // Deduct stock for all items atomically
+        for (const item of cartItems) {
+            await Product.findByIdAndUpdate(
+                item._id,
+                { $inc: { stock: -item.quantity } },
+                { new: true }
+            );
+        }
+
         const newOrder = new Order({
             user: req.user._id,
             products: cartItems.map(item => ({ product: item, quantity: item.quantity })),
