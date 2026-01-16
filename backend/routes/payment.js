@@ -16,7 +16,9 @@ router.post('/create-order', async (req, res) => {
     const calculateOrderAmount = (items) => {
         let total = 0;
         items.forEach(item => {
-            total += item.price * item.quantity;
+            const discount = item.discount || 0;
+            const discountedPrice = item.price * (1 - discount / 100);
+            total += discountedPrice * item.quantity;
         });
         return Math.round(total * 100);
     };

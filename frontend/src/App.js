@@ -2,11 +2,11 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import './App.css';
-// Make sure you have a responsive.css file if you are using these classNames
-// import './responsive.css'; 
+import './responsive.css';
 import { Layout, Typography, Button, Space, Dropdown, Menu, Drawer, ConfigProvider, Divider } from 'antd';
 import { DownOutlined, MenuOutlined } from '@ant-design/icons';
 import ProductList from "./components/ProductList";
+import HomePage from "./components/HomePage";
 import ProductPage from "./components/ProductPage";
 import CartPage from "./components/CartPage";
 import CartIcon from "./components/CartIcon";
@@ -32,6 +32,8 @@ import ForgotPasswordPage from './components/ForgotPasswordPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import AdminPincodeManager from './components/AdminPincodeManager';
 import AdminUpiPayments from './components/AdminUpiPayments';
+import AdminCategoryManager from './components/AdminCategoryManager';
+import AdminBannerManager from './components/AdminBannerManager';
 import PaymentPage from './components/PaymentPage';
 const { Header, Content, Footer } = Layout;
 const { Title } = Typography;
@@ -52,8 +54,9 @@ const AppHeader = () => {
     ] : []),
     // Conditionally add item for admins
     ...(user?.isAdmin ? [{ key: '4', label: <Link to="/admin">Admin Panel</Link> }] : []),
-    { key: '5', label: <Link to="/help">Help & Contact</Link> },
-    { key: '6', label: <div onClick={logout}>Logout</div> },
+    { key: '5', label: <Link to="/payment">UPI Payment</Link> },
+    { key: '6', label: <Link to="/help">Help & Contact</Link> },
+    { key: '7', label: <div onClick={logout}>Logout</div> },
   ];
 
   // This component is created to ensure it re-renders correctly on state change
@@ -155,7 +158,9 @@ function App() {
                 >
                   <Routes>
                     {/* Public Routes */}
-                    <Route path="/" element={<ProductList />} />
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/products" element={<ProductList />} />
+                    <Route path="/products/:categorySlug" element={<ProductList />} />
                     <Route path="/search/:keyword" element={<ProductList />} />
                     <Route path="/product/:id" element={<ProductPage />} />
                     <Route path="/login" element={<LoginPage />} />
@@ -184,6 +189,8 @@ function App() {
                       <Route path="queries" element={<AdminQueryList />} />
                       <Route path="settings" element={<AdminSettings />} />
                       <Route path="pincodes" element={<AdminPincodeManager />} />
+                      <Route path="categories" element={<AdminCategoryManager />} />
+                      <Route path="banners" element={<AdminBannerManager />} />
                     </Route>
                   </Routes>
                 </div>

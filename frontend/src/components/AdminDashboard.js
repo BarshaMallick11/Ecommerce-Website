@@ -1,7 +1,6 @@
 // frontend/src/components/AdminDashboard.js
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Space, Typography, message, Popconfirm } from 'antd';
-import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import ProductEditModal from './ProductEditModal';
@@ -60,6 +59,12 @@ const AdminDashboard = () => {
             formData.append('name', values.name);
             formData.append('description', values.description);
             formData.append('price', values.price);
+            formData.append('quantity', values.quantity || 0);
+            formData.append('unit', values.unit || 'Kg');
+            formData.append('discount', values.discount || 0);
+            if (values.category) {
+                formData.append('category', values.category);
+            }
 
             // Add main image file if present
             if (values.mainImageFile) {
@@ -114,6 +119,13 @@ const AdminDashboard = () => {
     const columns = [
         { title: 'Name', dataIndex: 'name', key: 'name' },
         { title: 'Price', dataIndex: 'price', key: 'price', render: (price) => `₹${price.toFixed(2)}` },
+        { title: 'Quantity', dataIndex: 'quantity', key: 'quantity', render: (quantity) => quantity || 0 },
+        {
+            title: 'Discount',
+            dataIndex: 'discount',
+            key: 'discount',
+            render: (discount) => discount ? `${discount}%` : 'No discount'
+        },
         {
             title: 'Action',
             key: 'action',

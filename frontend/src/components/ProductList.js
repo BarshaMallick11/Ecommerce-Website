@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Row, Col, Spin, Typography } from 'antd';
 import Product from './Product';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import BackButton from './BackButton';
 
 const { Title } = Typography;
@@ -11,23 +11,52 @@ const { Title } = Typography;
 const ProductList = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const { keyword } = useParams();
+    const [searchInput, setSearchInput] = useState('');
+    const [categoryDetails, setCategoryDetails] = useState(null);
+    const { keyword, categorySlug } = useParams(); // Get both from URL path
+    const navigate = useNavigate();
+
+    const handleSearchSubmit = (e) => {
+        e.preventDefault();
+        if (searchInput.trim()) {
+            navigate(`/search/${searchInput}`);
+            setSearchInput('');
+        }
+    };
 
     useEffect(() => {
-        const fetchProducts = async () => {
+        const fetchCategoryAndProducts = async () => {
             setLoading(true);
             try {
-                const url = keyword ? `/products?keyword=${keyword}` : '/products';
+                // If we have a category slug, fetch category details
+                if (categorySlug) {
+                    const { data: categoryData } = await axios.get(
+                        `${process.env.REACT_APP_API_URL}/api/categories/${categorySlug}`
+                    );
+                    setCategoryDetails(categoryData);
+                }
+
+                // Build products URL
+                let url = '/products';
+                const params = [];
+
+                if (keyword) params.push(`keyword=${keyword}`);
+                if (categorySlug) params.push(`category=${categorySlug}`);
+
+                if (params.length > 0) {
+                    url += `?${params.join('&')}`;
+                }
+
                 const { data } = await axios.get(`${process.env.REACT_APP_API_URL}${url}`);
                 setProducts(data);
             } catch (error) {
-                console.error("Failed to fetch products:", error);
+                console.error("Failed to fetch:", error);
             } finally {
                 setLoading(false);
             }
         };
-        fetchProducts();
-    }, [keyword]);
+        fetchCategoryAndProducts();
+    }, [keyword, categorySlug]);
 
     if (loading) {
         return <div style={{ textAlign: 'center', marginTop: '50px' }}><Spin size="large" /></div>;
@@ -35,21 +64,59 @@ const ProductList = () => {
 
     return (
         <div>
-            {keyword && <BackButton />}
-            <Title level={2} style={{ textAlign: 'center', margin: '40px 0' }}>
-                {keyword ? `Search Results for "${keyword}"` : 'Our Products'}
+            {(keyword || categorySlug) && <BackButton />}
+
+            {/* Desktop Title - Hidden on mobile */}
+            <Title level={2} className="desktop-product-title" style={{ textAlign: 'center', margin: '40px 0' }}>
+                {keyword ? `Search Results for "${keyword}"` : categoryDetails ? categoryDetails.name : 'Our Products'}
             </Title>
-            <Row gutter={[24, 24]} justify="start">
-                {products.length > 0 ? products.map(product => (
-                    <Col key={product._id} xs={12} sm={12} md={8} lg={6}>
-                        <Product product={product} />
-                    </Col>
-                )) : (
-                    <Col span={24} style={{ textAlign: 'center' }}>
-                        <Title level={4}>No products found.</Title>
-                    </Col>
+
+            {/* Mobile Search Interface - Hidden on desktop */}
+            <div className="mobile-search-interface">
+                <form className="mobile-search-bar" onSubmit={handleSearchSubmit}>
+                    <input
+                        type="text"
+                        placeholder="Search for groceries, fruits, snacks…"
+                        className="mobile-search-input"
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                    />
+                    <button type="submit" className="mobile-search-icon-btn">
+                        <svg className="mobile-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.35-4.35" />
+                        </svg>
+                    </button>
+                </form>
+
+                {/* Mobile category title */}
+                {categoryDetails && (
+                    <div style={{ padding: '16px', paddingBottom: '8px' }}>
+                        <Title level={4} style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: '#111827' }}>
+                            {categoryDetails.name}
+                        </Title>
+                        {categoryDetails.description && (
+                            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
+                                {categoryDetails.description}
+                            </p>
+                        )}
+                    </div>
                 )}
-            </Row>
+            </div>
+
+            <div className="product-list-container">
+                <Row gutter={[24, 24]} justify="start">
+                    {products.length > 0 ? products.map(product => (
+                        <Col key={product._id} xs={12} sm={12} md={8} lg={6}>
+                            <Product product={product} />
+                        </Col>
+                    )) : (
+                        <Col span={24} style={{ textAlign: 'center' }}>
+                            <Title level={4}>No products found.</Title>
+                        </Col>
+                    )}
+                </Row>
+            </div>
         </div>
     );
 };

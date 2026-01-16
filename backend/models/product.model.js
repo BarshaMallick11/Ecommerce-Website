@@ -26,6 +26,14 @@ const productSchema = new Schema({
       message: 'Maximum 5 images allowed per product'
     }
   }, // Additional images (up to 5 total)
+  category: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+    required: false // Making it optional for backward compatibility
+  },
+  quantity: { type: Number, default: 0 }, // Stock quantity
+  unit: { type: String, enum: ['gm', 'Kg', 'L'], default: 'Kg' }, // Unit of measurement
+  discount: { type: Number, default: 0, min: 0, max: 100 }, // Discount percentage (0-100)
   reviews: [reviewSchema],
   rating: { type: Number, required: true, default: 0 },
   numReviews: { type: Number, required: true, default: 0 },

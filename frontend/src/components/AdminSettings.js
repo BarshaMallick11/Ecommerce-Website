@@ -1,7 +1,7 @@
 // frontend/src/components/AdminSettings.js
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Button, Card, Typography, message, Spin, Divider, Switch, Upload, Image } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Form, Input, InputNumber, Button, Card, Typography, message, Spin, Divider, Switch, Upload, Image } from 'antd';
+import { PlusOutlined, CarOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import AdminNav from './AdminNav';
@@ -25,7 +25,11 @@ const AdminSettings = () => {
                     contactPhone: data.contactPhone,
                     contactEmail: data.contactEmail,
                     upiId: data.upiId || 'yourname@okaxis',
-                    upiEnabled: data.upiEnabled !== false
+                    upiEnabled: data.upiEnabled !== false,
+                    // Delivery Charge Settings
+                    deliveryCharge: data.deliveryCharge || 40,
+                    freeDeliveryThreshold: data.freeDeliveryThreshold || 399,
+                    deliveryChargeEnabled: data.deliveryChargeEnabled !== false
                 });
                 // Set QR code preview if exists
                 if (data.upiQrCodeUrl) {
@@ -212,6 +216,70 @@ const AdminSettings = () => {
                             3. Take a screenshot or download your QR<br />
                             4. Upload it using the button above
                         </Paragraph>
+                    </Card>
+
+                    {/* Delivery Charge Settings */}
+                    <Card style={{ marginBottom: 24 }}>
+                        <Title level={5}>
+                            <CarOutlined style={{ marginRight: 8 }} />
+                            Delivery Charge Settings
+                        </Title>
+                        <Paragraph type="secondary">
+                            Configure delivery charges and free delivery threshold for your store.
+                        </Paragraph>
+
+                        <Form.Item
+                            name="deliveryChargeEnabled"
+                            label="Enable Delivery Charges"
+                            valuePropName="checked"
+                        >
+                            <Switch />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="deliveryCharge"
+                            label="Delivery Charge (₹)"
+                            rules={[{ required: true, message: 'Please enter delivery charge' }]}
+                            extra="Amount charged for delivery on orders below the free delivery threshold"
+                        >
+                            <InputNumber
+                                min={0}
+                                max={500}
+                                size="large"
+                                style={{ width: '100%' }}
+                                prefix="₹"
+                                placeholder="40"
+                            />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="freeDeliveryThreshold"
+                            label="Free Delivery Above (₹)"
+                            rules={[{ required: true, message: 'Please enter free delivery threshold' }]}
+                            extra="Orders above this amount will get FREE delivery"
+                        >
+                            <InputNumber
+                                min={0}
+                                max={5000}
+                                size="large"
+                                style={{ width: '100%' }}
+                                prefix="₹"
+                                placeholder="399"
+                            />
+                        </Form.Item>
+
+                        <div style={{
+                            background: '#f6ffed',
+                            padding: '12px',
+                            borderRadius: '8px',
+                            border: '1px solid #b7eb8f'
+                        }}>
+                            <Text>
+                                <strong>Current Rule:</strong> Orders above ₹{form.getFieldValue('freeDeliveryThreshold') || 399} get
+                                <Text strong style={{ color: '#52c41a' }}> FREE Delivery</Text>.
+                                Others pay ₹{form.getFieldValue('deliveryCharge') || 40} delivery charge.
+                            </Text>
+                        </div>
                     </Card>
 
                     {/* Save Button */}

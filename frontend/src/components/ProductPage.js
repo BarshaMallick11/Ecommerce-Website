@@ -4,8 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import BackButton from './BackButton';
-import { Row, Col, Spin, Typography, Button, Image, Rate, Tag, Space, Card } from 'antd';
-import { ShoppingCartOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
+import { Row, Col, Spin, Typography, Button, Image, Rate, Tag, Space, Card, message } from 'antd';
+import { ShoppingCartOutlined, MinusOutlined, PlusOutlined, ShareAltOutlined } from '@ant-design/icons';
 import ProductReviews from './ProductReviews';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -52,6 +52,30 @@ const ProductPage = () => {
     const decreaseQuantity = () => {
         if (quantity > 1) {
             setQuantity(prev => prev - 1);
+        }
+    };
+
+    const handleShare = async () => {
+        const shareData = {
+            title: product.name,
+            text: `Check out ${product.name} - ₹${product.price}`,
+            url: window.location.href
+        };
+
+        try {
+            if (navigator.share) {
+                // Use Web Share API for mobile devices
+                await navigator.share(shareData);
+            } else {
+                // Fallback: Copy link to clipboard
+                await navigator.clipboard.writeText(window.location.href);
+                message.success('Product link copied to clipboard!');
+            }
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error('Error sharing:', error);
+                message.error('Failed to share product');
+            }
         }
     };
 
@@ -159,10 +183,20 @@ const ProductPage = () => {
                         <div>
 
 
-                            {/* Product Name and Stock Badge */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            {/* Product Name and Share Button */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                                 <Title level={2} style={{ margin: 0 }}>{product.name}</Title>
-                                <Tag color="green" style={{ fontSize: '12px' }}>In Stock</Tag>
+                                <Button
+                                    icon={<ShareAltOutlined />}
+                                    shape="circle"
+                                    size="large"
+                                    onClick={handleShare}
+                                    style={{
+                                        border: '1px solid #e5e7eb',
+                                        backgroundColor: '#f9fafb',
+                                        color: '#374151'
+                                    }}
+                                />
                             </div>
 
                             {/* Rating */}
@@ -173,15 +207,30 @@ const ProductPage = () => {
                                 </Space>
                             </div>
 
+                            {/* Discount Badge Only */}
+                            <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
+                                {product.discount > 0 && (
+                                    <Tag icon="🎉" color="green">
+                                        {product.discount}% Discount
+                                    </Tag>
+                                )}
+                            </div>
+
                             {/* Price */}
                             <div style={{ marginTop: '20px' }}>
                                 <Space align="baseline">
                                     <Text strong className="product-detail-price" style={{ fontSize: '32px', color: '#262626' }}>
-                                        ₹{product.price.toFixed(2)}
+                                        ₹{(product.price * (1 - (product.discount || 0) / 100)).toFixed(2)}
                                     </Text>
-                                    <Text delete type="secondary" style={{ fontSize: '20px' }}>
-                                        ₹{(product.price * 1.2).toFixed(2)}
-                                    </Text>
+                                    {product.discount ? (
+                                        <Text delete type="secondary" style={{ fontSize: '20px' }}>
+                                            ₹{product.price.toFixed(2)}
+                                        </Text>
+                                    ) : (
+                                        <Text delete type="secondary" style={{ fontSize: '20px' }}>
+                                            ₹{(product.price * 1.2).toFixed(2)}
+                                        </Text>
+                                    )}
                                 </Space>
                             </div>
 

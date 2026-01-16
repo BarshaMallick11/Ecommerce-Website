@@ -1,6 +1,7 @@
 // frontend/src/components/CheckoutPage.js
-import React, { useState } from 'react';
-import { Button, Typography, message, Radio, Space } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Button, Typography, message, Radio, Space, Card, Divider, Tag } from 'antd';
+import { CarOutlined, GiftOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -8,17 +9,51 @@ import { useNavigate } from 'react-router-dom';
 import BackButton from './BackButton';
 import UpiPaymentModal from './UpiPaymentModal';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const CheckoutPage = () => {
     const { cartItems, clearCart } = useCart();
     const { user, token } = useAuth();
     const navigate = useNavigate();
-    const [paymentMethod, setPaymentMethod] = useState('Razorpay'); // Default to Razorpay
+    const [paymentMethod, setPaymentMethod] = useState('Razorpay');
     const [upiModalVisible, setUpiModalVisible] = useState(false);
     const [pendingOrderId, setPendingOrderId] = useState(null);
+    const [deliverySettings, setDeliverySettings] = useState({
+        deliveryCharge: 40,
+        freeDeliveryThreshold: 399,
+        deliveryChargeEnabled: true
+    });
 
-    const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    // Fetch delivery settings
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/settings`);
+                setDeliverySettings({
+                    deliveryCharge: data.deliveryCharge || 40,
+                    freeDeliveryThreshold: data.freeDeliveryThreshold || 399,
+                    deliveryChargeEnabled: data.deliveryChargeEnabled !== false
+                });
+            } catch (error) {
+                console.error('Failed to fetch settings');
+            }
+        };
+        fetchSettings();
+    }, []);
+
+    // Calculate subtotal using discounted price
+    const subtotal = cartItems.reduce((sum, item) => {
+        const discount = item.discount || 0;
+        const discountedPrice = item.price * (1 - discount / 100);
+        return sum + discountedPrice * item.quantity;
+    }, 0);
+
+    // Calculate delivery charge
+    const isFreeDelivery = subtotal >= deliverySettings.freeDeliveryThreshold;
+    const deliveryCharge = (!deliverySettings.deliveryChargeEnabled || isFreeDelivery) ? 0 : deliverySettings.deliveryCharge;
+
+    // Final total
+    const total = subtotal + deliveryCharge;
 
     const handlePlaceOrder = async () => {
         if (!user) {
@@ -142,8 +177,64 @@ const CheckoutPage = () => {
                 </Space>
             </Radio.Group>
 
-            <Title level={4}>Total: ₹{total.toFixed(2)}</Title>
-            <Button type="primary" size="large" onClick={handlePlaceOrder}>
+            {/* Bill Details Card */}
+            <Card style={{ marginBottom: 24, borderRadius: '12px' }}>
+                <Title level={5} style={{ marginBottom: '16px' }}>Bill Details</Title>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <Text>Item Total</Text>
+                    <Text>₹{subtotal.toFixed(2)}</Text>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', alignItems: 'center' }}>
+                    <Space>
+                        <CarOutlined style={{ color: isFreeDelivery ? '#52c41a' : '#666' }} />
+                        <Text>Delivery Charge</Text>
+                    </Space>
+                    {isFreeDelivery ? (
+                        <Space>
+                            <Text delete style={{ color: '#999' }}>₹{deliverySettings.deliveryCharge}</Text>
+                            <Tag color="green">FREE</Tag>
+                        </Space>
+                    ) : (
+                        <Text>₹{deliveryCharge.toFixed(2)}</Text>
+                    )}
+                </div>
+
+                <Divider style={{ margin: '12px 0' }} />
+
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Title level={4} style={{ margin: 0 }}>To Pay</Title>
+                    <Title level={4} style={{ margin: 0, color: '#4f772d' }}>₹{total.toFixed(2)}</Title>
+                </div>
+
+                {isFreeDelivery && (
+                    <div style={{
+                        background: '#f6ffed',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        marginTop: '12px',
+                        textAlign: 'center'
+                    }}>
+                        <Text style={{ color: '#52c41a' }}>
+                            🎉 FREE Delivery on this order!
+                        </Text>
+                    </div>
+                )}
+            </Card>
+
+            <Button
+                type="primary"
+                size="large"
+                onClick={handlePlaceOrder}
+                block
+                style={{
+                    height: '48px',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    background: '#4f772d'
+                }}
+            >
                 {paymentMethod === 'COD' ? 'Place Order' : paymentMethod === 'UPI' ? 'Proceed to Pay' : 'Pay with Razorpay'}
             </Button>
 

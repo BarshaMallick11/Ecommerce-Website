@@ -13,7 +13,9 @@ import {
     Descriptions,
     Typography,
     Tabs,
-    Grid
+    Grid,
+    Upload,
+    Spin
 } from 'antd';
 import {
     ArrowLeftOutlined,
@@ -22,9 +24,12 @@ import {
     EyeOutlined,
     ClockCircleOutlined,
     CheckCircleOutlined,
-    CloseCircleOutlined
+    CloseCircleOutlined,
+    PlusOutlined,
+    SettingOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const { TextArea } = Input;
@@ -43,6 +48,15 @@ const AdminUpiPayments = () => {
     const [actionType, setActionType] = useState(''); // 'approve' or 'reject'
     const [activeTab, setActiveTab] = useState('pending');
     const { token } = useAuth();
+    const navigate = useNavigate();
+
+    // UPI Settings Modal State
+    const [upiSettingsModalVisible, setUpiSettingsModalVisible] = useState(false);
+    const [upiId, setUpiId] = useState('');
+    const [qrCodePreview, setQrCodePreview] = useState('');
+    const [qrCodeFile, setQrCodeFile] = useState(null);
+    const [savingSettings, setSavingSettings] = useState(false);
+    const [loadingSettings, setLoadingSettings] = useState(false);
 
     useEffect(() => {
         fetchPayments();
@@ -65,6 +79,86 @@ const AdminUpiPayments = () => {
             message.error('Failed to fetch payments');
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Fetch UPI Settings
+    const fetchUpiSettings = async () => {
+        setLoadingSettings(true);
+        try {
+            const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/settings`);
+            setUpiId(data.upiId || '');
+            if (data.upiQrCodeUrl) {
+                setQrCodePreview(data.upiQrCodeUrl);
+            }
+        } catch (error) {
+            message.error('Failed to load UPI settings');
+        } finally {
+            setLoadingSettings(false);
+        }
+    };
+
+    // Open UPI Settings Modal
+    const openUpiSettingsModal = () => {
+        fetchUpiSettings();
+        setUpiSettingsModalVisible(true);
+    };
+
+    // Handle QR Code Upload
+    const handleQrCodeChange = (info) => {
+        const file = info.file.originFileObj || info.file;
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => setQrCodePreview(e.target.result);
+            reader.readAsDataURL(file);
+            setQrCodeFile(file);
+        }
+    };
+
+    // Save UPI Settings
+    const saveUpiSettings = async () => {
+        if (!upiId.trim()) {
+            message.error('Please enter UPI ID');
+            return;
+        }
+
+        setSavingSettings(true);
+        try {
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            let qrCodeUrl = qrCodePreview;
+
+            // Upload QR code if new file selected
+            if (qrCodeFile) {
+                const formData = new FormData();
+                formData.append('qrCode', qrCodeFile);
+
+                const uploadRes = await axios.post(
+                    `${process.env.REACT_APP_API_URL}/api/settings/upload-qr`,
+                    formData,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    }
+                );
+                qrCodeUrl = uploadRes.data.url;
+            }
+
+            // Update settings
+            await axios.put(
+                `${process.env.REACT_APP_API_URL}/api/settings`,
+                { upiId, upiQrCodeUrl: qrCodeUrl },
+                config
+            );
+
+            message.success('UPI settings saved successfully!');
+            setUpiSettingsModalVisible(false);
+            setQrCodeFile(null);
+        } catch (error) {
+            message.error('Failed to save UPI settings');
+        } finally {
+            setSavingSettings(false);
         }
     };
 
@@ -402,6 +496,102 @@ const AdminUpiPayments = () => {
                                 placeholder="Add a note about this verification..."
                                 style={{ marginTop: 8 }}
                             />
+                        </div>
+                    </div>
+                )}
+            </Modal>
+
+            {/* UPI Settings Modal */}
+            <Modal
+                title={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <SettingOutlined />
+                        <span>Edit UPI Settings</span>
+                    </div>
+                }
+                open={upiSettingsModalVisible}
+                onCancel={() => {
+                    setUpiSettingsModalVisible(false);
+                    setQrCodeFile(null);
+                }}
+                footer={[
+                    <Button key="cancel" onClick={() => {
+                        setUpiSettingsModalVisible(false);
+                        setQrCodeFile(null);
+                    }}>
+                        Cancel
+                    </Button>,
+                    <Button
+                        key="save"
+                        type="primary"
+                        onClick={saveUpiSettings}
+                        loading={savingSettings}
+                    >
+                        Save Settings
+                    </Button>
+                ]}
+                width={screens.xs ? '100%' : 500}
+                centered
+            >
+                {loadingSettings ? (
+                    <div style={{ textAlign: 'center', padding: '40px' }}>
+                        <Spin size="large" />
+                    </div>
+                ) : (
+                    <div>
+                        {/* UPI ID Input */}
+                        <div style={{ marginBottom: 24 }}>
+                            <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                                UPI ID <span style={{ color: 'red' }}>*</span>
+                            </Text>
+                            <Input
+                                value={upiId}
+                                onChange={(e) => setUpiId(e.target.value)}
+                                placeholder="yourname@okaxis"
+                                size="large"
+                                prefix="💳"
+                            />
+                            <Text type="secondary" style={{ fontSize: 12, marginTop: 4, display: 'block' }}>
+                                e.g., yourname@okaxis, 9876543210@paytm
+                            </Text>
+                        </div>
+
+                        {/* QR Code Section */}
+                        <div>
+                            <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                                UPI QR Code
+                            </Text>
+
+                            {/* Current QR Preview */}
+                            {qrCodePreview && (
+                                <div style={{ marginBottom: 16, textAlign: 'center' }}>
+                                    <Image
+                                        src={qrCodePreview}
+                                        alt="UPI QR Code"
+                                        width={150}
+                                        style={{ border: '2px solid #d9d9d9', borderRadius: 8 }}
+                                    />
+                                    <div style={{ marginTop: 8 }}>
+                                        <Text type="secondary">Current QR Code</Text>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Upload Button */}
+                            <Upload
+                                beforeUpload={() => false}
+                                onChange={handleQrCodeChange}
+                                maxCount={1}
+                                showUploadList={false}
+                                accept="image/*"
+                            >
+                                <Button icon={<PlusOutlined />} style={{ width: '100%' }}>
+                                    {qrCodePreview ? 'Change QR Code' : 'Upload QR Code'}
+                                </Button>
+                            </Upload>
+                            <Text type="secondary" style={{ fontSize: 12, marginTop: 8, display: 'block' }}>
+                                Upload your UPI QR code image (JPG, PNG, WebP)
+                            </Text>
                         </div>
                     </div>
                 )}

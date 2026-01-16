@@ -271,10 +271,25 @@ const UpiPaymentModal = ({ visible, onClose, orderId, amount, onSuccess }) => {
                         required
                         extra="Upload screenshot showing UTR, amount, and payment status"
                     >
-                        <Upload {...uploadProps}>
-                            <Button icon={<UploadOutlined />} size={screens.xs ? 'middle' : 'large'} block>
-                                Click to Upload Screenshot
-                            </Button>
+                        <Upload
+                            {...uploadProps}
+                            listType="picture-card"
+                            style={{ width: '100%' }}
+                        >
+                            {fileList.length === 0 && (
+                                <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '8px'
+                                }}>
+                                    <UploadOutlined style={{ fontSize: 24, marginBottom: 8 }} />
+                                    <span style={{ fontSize: 12, textAlign: 'center' }}>
+                                        Click to Upload
+                                    </span>
+                                </div>
+                            )}
                         </Upload>
                     </Form.Item>
 

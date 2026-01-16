@@ -1,7 +1,8 @@
 // frontend/src/components/ProductEditModal.js
 import React, { useEffect, useState } from 'react';
-import { Modal, Form, Input, InputNumber, Upload, message, Typography, Divider, Space, Image } from 'antd';
+import { Modal, Form, Input, InputNumber, Upload, message, Typography, Divider, Space, Image, Select } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import axios from 'axios';
 
 const { Title, Text } = Typography;
 
@@ -11,6 +12,20 @@ const ProductEditModal = ({ visible, onCancel, onFinish, initialValues }) => {
     const [mainImagePreview, setMainImagePreview] = useState(null);
     const [additionalImages, setAdditionalImages] = useState([]); // Array of {file, preview}
     const [existingImages, setExistingImages] = useState([]); // Existing image URLs
+    const [categories, setCategories] = useState([]);
+
+    useEffect(() => {
+        // Fetch categories
+        const fetchCategories = async () => {
+            try {
+                const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/categories`);
+                setCategories(data);
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            }
+        };
+        fetchCategories();
+    }, []);
 
     useEffect(() => {
         if (initialValues) {
@@ -160,11 +175,75 @@ const ProductEditModal = ({ visible, onCancel, onFinish, initialValues }) => {
                 </Form.Item>
 
                 <Form.Item
+                    name="category"
+                    label="Category"
+                    rules={[{ required: false }]}
+                >
+                    <Select
+                        size="large"
+                        placeholder="Select a category"
+                        allowClear
+                        showSearch
+                        optionFilterProp="children"
+                    >
+                        {categories.map(cat => (
+                            <Select.Option key={cat._id} value={cat._id}>
+                                {cat.name}
+                            </Select.Option>
+                        ))}
+                    </Select>
+                </Form.Item>
+
+                <Form.Item
                     name="price"
                     label="Price"
                     rules={[{ required: true, message: 'Please input the price!' }]}
                 >
                     <InputNumber min={0} style={{ width: '100%' }} size="large" />
+                </Form.Item>
+
+                <Form.Item
+                    name="quantity"
+                    label="Quantity (Stock)"
+                    rules={[{ required: true, message: 'Please input the quantity!' }]}
+                >
+                    <InputNumber min={0} step={1} style={{ width: '100%' }} size="large" placeholder="e.g., 50" />
+                </Form.Item>
+
+                <Form.Item
+                    name="unit"
+                    label="Unit"
+                    rules={[{ required: true, message: 'Please select a unit!' }]}
+                    initialValue="Kg"
+                >
+                    <Select size="large" placeholder="Select unit">
+                        <Select.Option value="gm">Grams (gm)</Select.Option>
+                        <Select.Option value="Kg">Kilograms (Kg)</Select.Option>
+                        <Select.Option value="L">Litres (L)</Select.Option>
+                    </Select>
+                </Form.Item>
+
+                <Form.Item
+                    name="discount"
+                    label="Discount (%)"
+                    rules={[
+                        { required: false },
+                        {
+                            type: 'number',
+                            message: 'Discount must be a valid number'
+                        },
+                        {
+                            validator: (_, value) => {
+                                if (value === undefined || value === null || value === '') return Promise.resolve();
+                                if (value < 0 || value > 100) {
+                                    return Promise.reject(new Error('Discount must be between 0 and 100%'));
+                                }
+                                return Promise.resolve();
+                            }
+                        }
+                    ]}
+                >
+                    <InputNumber min={0} max={100} step={0.5} style={{ width: '100%' }} size="large" placeholder="e.g., 10" />
                 </Form.Item>
 
                 <Divider />

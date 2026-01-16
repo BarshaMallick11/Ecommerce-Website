@@ -1,6 +1,6 @@
 // frontend/src/components/AdminOrderList.js
 import React, { useState, useEffect, useCallback } from 'react';
-import { List, Card, Button, Typography, message, Tag, Modal, Form, Input, Select, Spin, Tooltip, Divider, DatePicker, Popconfirm} from 'antd'; // Import Tooltip
+import { List, Card, Button, Typography, message, Tag, Modal, Form, Input, Select, Spin, Tooltip, Divider, DatePicker, Popconfirm } from 'antd'; // Import Tooltip
 import { DeleteOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -59,8 +59,8 @@ const AdminOrderList = () => {
 
     const showUpdateModal = (order) => {
         setCurrentOrder(order);
-        form.setFieldsValue({ 
-            status: order.status, 
+        form.setFieldsValue({
+            status: order.status,
             trackingNumber: order.trackingNumber,
             estimatedDeliveryDate: order.estimatedDeliveryDate ? moment(order.estimatedDeliveryDate) : null
         });
@@ -71,7 +71,7 @@ const AdminOrderList = () => {
         let color = 'geekblue';
         if (status === 'Shipped') color = 'orange';
         if (status === 'Delivered') color = 'green';
-         if (status === 'Cancelled') color = 'red';
+        if (status === 'Cancelled') color = 'red';
         return <Tag color={color}>{status ? status.toUpperCase() : 'N/A'}</Tag>;
     };
 
@@ -82,13 +82,13 @@ const AdminOrderList = () => {
 
             <Title level={4} style={{ marginTop: 24 }}>All Customer Orders</Title>
 
-            {loading && orders.length === 0 ? <div style={{textAlign: 'center', marginTop: 50}}><Spin size="large"/></div> : (
+            {loading && orders.length === 0 ? <div style={{ textAlign: 'center', marginTop: 50 }}><Spin size="large" /></div> : (
                 <List
                     grid={{ gutter: 16, xs: 1, sm: 2, md: 2, lg: 3, xl: 4 }}
                     dataSource={orders}
                     renderItem={(order) => (
                         <List.Item>
-                            <Card 
+                            <Card
                                 title={
                                     <Tooltip title={order._id}>
                                         <span>{`Order: ...${order._id.substring(order._id.length - 6)}`}</span>
@@ -102,6 +102,38 @@ const AdminOrderList = () => {
                             >
                                 <p><Text strong>User:</Text> {order.user ? order.user.username : 'N/A'}</p>
                                 <p><Text strong>Date:</Text> {moment(order.createdAt).format('YYYY-MM-DD')}</p>
+
+                                {/* Product Items */}
+                                <div style={{
+                                    background: '#f9f9f9',
+                                    padding: '10px 12px',
+                                    borderRadius: '6px',
+                                    margin: '8px 0'
+                                }}>
+                                    <Text strong style={{ fontSize: '13px', color: '#555' }}>Items Ordered:</Text>
+                                    <div style={{ marginTop: '6px' }}>
+                                        {order.products && order.products.map((item, index) => (
+                                            <div
+                                                key={index}
+                                                style={{
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                    padding: '4px 0',
+                                                    borderBottom: index < order.products.length - 1 ? '1px solid #eee' : 'none'
+                                                }}
+                                            >
+                                                <Text style={{ fontSize: '13px', flex: 1 }}>
+                                                    {item.product?.name || item.name || 'Product'}
+                                                </Text>
+                                                <Tag color="blue" style={{ marginLeft: '8px' }}>
+                                                    x{item.quantity || item.qty || 1}
+                                                </Tag>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 <p><Text strong>Total:</Text> ₹{order.totalAmount.toFixed(2)}</p>
                                 <p><Text strong>Payment Mode:</Text>
                                     <Tag color={order.paymentMethod === 'COD' ? 'green' : 'blue'}>
@@ -114,8 +146,8 @@ const AdminOrderList = () => {
 
                                 <Divider style={{ margin: '12px 0' }} />
                                 <p><Text strong>Shipping Address:</Text></p>
-                                <Text>{order.shippingAddress.address}, {order.shippingAddress.city}, {order.shippingAddress.postalCode}</Text><br/>
-                                <Text>{order.shippingAddress.country}</Text><br/>
+                                <Text>{order.shippingAddress.address}, {order.shippingAddress.city}, {order.shippingAddress.postalCode}</Text><br />
+                                <Text>{order.shippingAddress.country}</Text><br />
                                 <Text>Phone: {order.shippingAddress.phoneNo}</Text>
                                 <Button type="primary" style={{ width: '100%', marginTop: 16 }} onClick={() => showUpdateModal(order)} disabled={order.status === 'Delivered'}>
                                     Update Status

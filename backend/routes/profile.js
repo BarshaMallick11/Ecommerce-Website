@@ -22,7 +22,14 @@ router.post('/address', protect, async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
         if (user) {
-            user.shippingAddresses.push(req.body);
+            const payload = { ...req.body };
+
+            if (payload.city) payload.city = String(payload.city).trim();
+            if (payload.district) payload.district = String(payload.district).trim();
+            if (payload.state) payload.state = String(payload.state).trim();
+            if (payload.postalCode) payload.postalCode = String(payload.postalCode).trim();
+
+            user.shippingAddresses.push(payload);
             const updatedUser = await user.save();
             res.status(201).json(updatedUser.shippingAddresses);
         } else {
@@ -32,6 +39,7 @@ router.post('/address', protect, async (req, res) => {
         res.status(400).json({ message: 'Error adding address' });
     }
 });
+
 // @desc   Update user profile
 // @route  PUT /api/profile
 // @access Private
@@ -67,7 +75,14 @@ router.put('/address/:id', protect, async (req, res) => {
         if (user) {
             const address = user.shippingAddresses.id(req.params.id);
             if (address) {
-                Object.assign(address, req.body);
+                const payload = { ...req.body };
+
+                if (payload.city) payload.city = String(payload.city).trim();
+                if (payload.district) payload.district = String(payload.district).trim();
+                if (payload.state) payload.state = String(payload.state).trim();
+                if (payload.postalCode) payload.postalCode = String(payload.postalCode).trim();
+
+                Object.assign(address, payload);
                 await user.save();
                 res.json(user.shippingAddresses);
             } else {

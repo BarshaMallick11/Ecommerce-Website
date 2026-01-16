@@ -9,26 +9,36 @@ const { protect, admin } = require('../middleware/authMiddleware');
 const upload = require('../middleware/upload');
 const cloudinary = require('../config/cloudinary');
 
-// @desc   Fetch all products OR search products with smart matching
-// @route  GET /products
+// @desc   Fetch all products OR search products OR filter by category
+// @route  GET /products?keyword=tea&category=fruits
 // @access Public
 router.get('/', async (req, res) => {
     try {
         const keyword = req.query.keyword;
+        const categorySlug = req.query.category;
         let products;
+        let query = {};
+
+        // Handle category filtering
+        if (categorySlug) {
+            const Category = require('../models/category.model');
+            const category = await Category.findOne({ slug: categorySlug });
+            if (category) {
+                query.category = category._id;
+            }
+        }
 
         if (keyword) {
             if (keyword.length < 3) {
                 // Use simple "starts with" regex for short keywords
-                products = await Product.find({
-                    name: {
-                        $regex: `^${keyword}`, // ^ means "starts with"
-                        $options: 'i'
-                    }
-                });
+                query.name = {
+                    $regex: `^${keyword}`, // ^ means "starts with"
+                    $options: 'i'
+                };
+                products = await Product.find(query).populate('category');
             } else {
                 // Use Atlas Search for longer, fuzzy queries
-                products = await Product.aggregate([
+                const searchResults = await Product.aggregate([
                     {
                         $search: {
                             index: 'default',
@@ -43,10 +53,17 @@ router.get('/', async (req, res) => {
                         }
                     }
                 ]);
+
+                // Apply category filter if present
+                if (query.category) {
+                    products = searchResults.filter(p => p.category && p.category.toString() === query.category.toString());
+                } else {
+                    products = searchResults;
+                }
             }
         } else {
-            // No keyword, fetch all products
-            products = await Product.find({});
+            // No keyword, fetch all products (optionally filtered by category)
+            products = await Product.find(query).populate('category');
         }
         res.json(products);
     } catch (error) {
@@ -120,8 +137,12 @@ router.post('/', protect, admin, upload.fields([
         console.log('=== Product Creation Request ===');
         console.log('Body:', req.body);
         console.log('Files:', req.files);
+        console.log('Quantity received:', req.body.quantity, 'Type:', typeof req.body.quantity);
+        console.log('Discount received:', req.body.discount, 'Type:', typeof req.body.discount);
+        console.log('Unit received:', req.body.unit);
+        console.log('Category received:', req.body.category);
 
-        const { name, price, description } = req.body;
+        const { name, price, description, quantity, discount, unit, category } = req.body;
 
         // Check if main image file was uploaded
         if (!req.files || !req.files.image) {
@@ -158,10 +179,15 @@ router.post('/', protect, admin, upload.fields([
         }
 
         // Create product with Cloudinary image URLs
+        // Convert quantity and discount to numbers (they come as strings from FormData)
         const product = new Product({
             name,
-            price,
+            price: Number(price),
             description,
+            category: category || null,
+            quantity: Number(quantity) || 0,
+            unit: unit || 'Kg',
+            discount: Number(discount) || 0,
             image: mainImageResult.secure_url,
             images: additionalImageUrls
         });
@@ -184,13 +210,17 @@ router.put('/:id', protect, admin, upload.fields([
     { name: 'additionalImages', maxCount: 5 }
 ]), async (req, res) => {
     try {
-        const { name, price, description, existingImages } = req.body;
+        const { name, price, description, quantity, discount, unit, category, existingImages } = req.body;
         const product = await Product.findById(req.params.id);
 
         if (product) {
             product.name = name;
-            product.price = price;
+            product.price = Number(price);
             product.description = description;
+            product.category = category || product.category;
+            product.quantity = quantity !== undefined ? Number(quantity) : product.quantity;
+            product.unit = unit || product.unit;
+            product.discount = discount !== undefined ? Number(discount) : product.discount;
 
             // If a new main image was uploaded, update it
             if (req.files && req.files.image) {

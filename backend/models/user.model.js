@@ -5,6 +5,8 @@ const Schema = mongoose.Schema;
 const addressSchema = new Schema({
     address: { type: String, required: true },
     city: { type: String, required: true },
+    district: { type: String },
+    state: { type: String },
     postalCode: { type: String, required: true },
     country: { type: String, required: true },
     phoneNo: { type: String, required: true },
