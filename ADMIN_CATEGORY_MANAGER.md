@@ -9,7 +9,7 @@ Admins can now fully manage categories through the admin panel!
 ## 📋 What Admins Can Do
 
 ### **1. View All Categories**
-- See list of all categories in a table
+- See list of all categories in a   table
 - View: Image, Name, Slug, Description, Status
 
 ### **2. Add New Category**
