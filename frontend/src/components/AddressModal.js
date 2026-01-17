@@ -39,6 +39,12 @@ const AddressModal = ({ visible, onCancel, onFinish, initialValues }) => {
                 <Form.Item name="city" label="City" rules={[{ required: true }]}>
                     <Input />
                 </Form.Item>
+                <Form.Item name="district" label="District" rules={[{ required: true }]}>
+                    <Input />
+                </Form.Item>
+                <Form.Item name="state" label="State" rules={[{ required: true }]}>
+                    <Input />
+                </Form.Item>
                 <Form.Item name="postalCode" label="Postal Code" rules={[{ required: true }]}>
                     <Input />
                 </Form.Item>

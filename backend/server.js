@@ -31,9 +31,15 @@ const settingsRouter = require('./routes/settings'); // Add
 const queriesRouter = require('./routes/queries');
 const shippingRouter = require('./routes/shipping');
 const pincodesRouter = require('./routes/pincodes');
+const coverageRouter = require('./routes/coverage');
 const upiPaymentRouter = require('./routes/upiPayment');
+const categoriesRouter = require('./routes/categories');
+const bannersRouter = require('./routes/banners');
+
+console.log('Banners router loaded successfully');
 
 app.use('/products', productsRouter);
+app.use('/api/categories', categoriesRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/payment', paymentRouter);
 app.use('/api/orders', ordersRouter);
@@ -45,7 +51,11 @@ app.use('/api/settings', settingsRouter); // Add
 app.use('/api/queries', queriesRouter);
 app.use('/api/shipping', shippingRouter);
 app.use('/api/pincodes', pincodesRouter);
+app.use('/api/coverage', coverageRouter);
 app.use('/api/upi-payment', upiPaymentRouter);
+app.use('/api/banners', bannersRouter);
+console.log('Banners route registered at /api/banners');
+
 app.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
 });

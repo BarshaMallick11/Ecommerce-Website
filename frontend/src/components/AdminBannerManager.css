@@ -1,0 +1,310 @@
+/* =================================================================
+   ADMIN BANNER MANAGER - RESPONSIVE STYLES
+   ================================================================= */
+
+/* Page Wrapper */
+.admin-banner-page {
+    box-sizing: border-box;
+}
+
+/* Base Container */
+.admin-banner-container {
+    padding: 24px;
+    background: #f5f5f5;
+    min-height: calc(100vh - 200px);
+    box-sizing: border-box;
+    margin-top: 24px;
+}
+
+/* Header */
+.admin-banner-header {
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.admin-banner-header-text {
+    flex: 1;
+    min-width: 200px;
+}
+
+.admin-banner-header-text h4.ant-typography {
+    margin: 0 0 4px 0 !important;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.admin-banner-header-text .ant-typography {
+    display: block;
+    line-height: 1.5;
+}
+
+/* Create Button */
+.admin-banner-create-btn {
+    height: 44px !important;
+    font-size: 16px !important;
+    border-radius: 6px !important;
+    white-space: nowrap;
+}
+
+/* Table Wrapper */
+.admin-banner-table-wrapper {
+    background: white;
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Desktop Table */
+.admin-banner-desktop-table {
+    display: block;
+}
+
+/* Mobile Cards - Hidden by Default */
+.banner-mobile-cards {
+    display: none;
+}
+
+/* =================================================================
+   MOBILE RESPONSIVE STYLES (max-width: 768px)
+   ================================================================= */
+
+@media (max-width: 768px) {
+
+    .admin-banner-page {
+        padding: 0;
+    }
+
+    .admin-banner-page > .ant-typography {
+        font-size: 20px !important;
+        margin-bottom: 12px !important;
+    }
+
+    .admin-banner-container {
+        padding: 12px;
+        margin-top: 16px;
+    }
+
+    /* Header - Stack Vertically */
+    .admin-banner-header {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .admin-banner-header-text {
+        width: 100%;
+        min-width: unset;
+    }
+
+    .admin-banner-header-text h4.ant-typography {
+        font-size: 18px !important;
+    }
+
+    /* Create Button - Full Width */
+    .admin-banner-create-btn {
+        width: 100% !important;
+        height: 48px !important;
+    }
+
+    /* Table Wrapper */
+    .admin-banner-table-wrapper {
+        padding: 12px;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    /* Hide Desktop Table */
+    .admin-banner-desktop-table {
+        display: none !important;
+    }
+
+    /* Show Mobile Cards */
+    .banner-mobile-cards {
+        display: block !important;
+    }
+
+    /* Mobile Loading */
+    .banner-mobile-loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 40px 20px;
+        background: white;
+        border-radius: 8px;
+    }
+
+    /* Mobile Empty */
+    .banner-mobile-empty {
+        text-align: center;
+        padding: 40px 20px;
+        background: white;
+        border-radius: 8px;
+    }
+
+    /* Banner Card Item */
+    .banner-card-item {
+        background: white;
+        border: 1px solid #e8e8e8;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+    }
+
+    /* Banner Card Preview */
+    .banner-card-preview {
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        min-height: 80px;
+    }
+
+    .banner-card-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    .banner-card-content {
+        flex: 1;
+        position: relative;
+        z-index: 1;
+    }
+
+    .banner-card-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .banner-card-subtitle {
+        font-size: 12px;
+        opacity: 0.95;
+    }
+
+    .banner-card-icon {
+        width: 44px;
+        height: 44px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 1;
+        flex-shrink: 0;
+        margin-left: 12px;
+    }
+
+    /* Banner Card Footer */
+    .banner-card-footer {
+        padding: 12px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid #f0f0f0;
+        background: #fafafa;
+    }
+
+    .banner-card-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .banner-card-order {
+        font-size: 12px;
+        color: #8c8c8c;
+        font-weight: 500;
+    }
+
+    .banner-card-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .banner-action-btn {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        padding: 0 !important;
+        border-radius: 8px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .banner-action-btn .anticon {
+        font-size: 14px !important;
+    }
+
+    /* Modal Fixes */
+    .banner-modal .ant-modal {
+        max-width: calc(100vw - 24px) !important;
+        margin: 12px auto !important;
+    }
+
+    .banner-modal .ant-modal-body {
+        padding: 16px !important;
+        max-height: calc(100vh - 180px);
+        overflow-y: auto;
+    }
+
+    .banner-preview {
+        margin-bottom: 16px !important;
+    }
+}
+
+/* =================================================================
+   EXTRA SMALL MOBILE (max-width: 480px)
+   ================================================================= */
+
+@media (max-width: 480px) {
+
+    .admin-banner-container {
+        padding: 8px;
+    }
+
+    .admin-banner-header {
+        padding: 14px;
+    }
+
+    .banner-card-preview {
+        padding: 14px 16px;
+    }
+
+    .banner-card-title {
+        font-size: 18px;
+    }
+
+    .banner-card-subtitle {
+        font-size: 11px;
+    }
+
+    .banner-card-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .banner-card-footer {
+        padding: 10px 14px;
+    }
+
+    .banner-action-btn {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+    }
+}

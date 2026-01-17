@@ -1,8 +1,8 @@
 // frontend/src/components/Product.js
 
-import React, { useState } from 'react';
-import { Card, Button, Typography, message, Rate } from 'antd';
-import { ShoppingCartOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
+import React from 'react';
+import { Card, Button, Typography, message, Rate, Tooltip } from 'antd';
+import { MinusOutlined, PlusOutlined, EditOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -18,16 +18,36 @@ const Product = ({ product }) => {
     const cartItem = cartItems.find(item => item._id === product._id);
     const currentQuantity = cartItem ? cartItem.quantity : 0;
 
+    // Stock management
+    const availableStock = product.stock || 0;
+    const isOutOfStock = availableStock === 0;
+    const canAddMore = currentQuantity < availableStock;
+
     const handlePlusClick = () => {
         if (!user) {
             message.warning('Please log in to add items to your cart.');
             navigate('/login');
             return;
         }
+
+        if (isOutOfStock) {
+            message.error('This product is out of stock');
+            return;
+        }
+
+        if (!canAddMore) {
+            message.warning(`Only ${availableStock} units available. You already have ${currentQuantity} in cart.`);
+            return;
+        }
+
         addToCart(product);
     };
 
     const increaseQuantity = () => {
+        if (!canAddMore) {
+            message.warning(`Limited stock! Only ${availableStock} units available.`);
+            return;
+        }
         addToCart(product);
     };
 
@@ -62,32 +82,130 @@ const Product = ({ product }) => {
             {/* Product Title with Plus Button (inline on desktop, separate on mobile) */}
             <div className="product-header-section">
                 {/* 1. Product Title */}
-                <div style={{ marginBottom: '8px' }}>
-                    <Link to={`/product/${product._id}`} className="product-title-link">
+                <div className="product-title-content" style={{ marginBottom: '8px' }}>
+                    {/* Desktop: Product Name + Quantity Badge */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <Link to={`/product/${product._id}`} className="product-title-link">
+                            <Text
+                                strong
+                                className="product-name-text"
+                                style={{
+                                    fontSize: '16px',
+                                    color: '#262626',
+                                    lineHeight: '1.4'
+                                }}
+                            >
+                                {product.name}
+                            </Text>
+                        </Link>
+
+                        {/* Desktop-only: Quantity Badge (inline with name) */}
+                        {product.quantity > 0 && (
+                            <span className="quantity-badge-desktop" style={{
+                                backgroundColor: '#d4f4dd',
+                                color: '#16a34a',
+                                padding: '2px 8px',
+                                borderRadius: '10px',
+                                fontSize: '11px',
+                                fontWeight: '600',
+                                border: '1px solid #86efac',
+                                whiteSpace: 'nowrap'
+                            }}>
+                                {product.quantity} {product.unit || 'Kg'}
+                            </span>
+                        )}
+                    </div>
+
+                    {/* Mobile-only: Product description */}
+                    <div className="product-description-mobile">
                         <Text
-                            strong
-                            style={{
-                                fontSize: '16px',
-                                display: 'block',
-                                color: '#262626',
-                                lineHeight: '1.4'
-                            }}
+                            type="secondary"
+                            style={{ fontSize: '12px' }}
                         >
-                            {product.name}
+                            {product.description}
                         </Text>
-                    </Link>
+                    </div>
+
+                    {/* Mobile-only: Badges (Quantity + Discount) */}
+                    <div className="product-badges-mobile">
+                        {product.quantity > 0 && (
+                            <span className="quantity-badge-mobile">
+                                {product.quantity} {product.unit || 'Kg'}
+                            </span>
+                        )}
+                        {product.discount > 0 && (
+                            <span className="discount-badge-mobile">
+                                -{product.discount}%
+                            </span>
+                        )}
+                    </div>
+
+                    {/* Mobile-only: Rating (after badges, before price) */}
+                    <div className="product-rating-mobile" style={{ display: 'none', marginTop: '4px' }}>
+                        <Rate
+                            disabled
+                            allowHalf
+                            value={product.rating || 0}
+                            style={{ fontSize: '10px' }}
+                        />
+                    </div>
                 </div>
 
-                {/* Plus Icon - Shows inline on desktop, separate on mobile */}
+                {/* Admin Edit Button - Mobile only */}
+                {user?.isAdmin && (
+                    <div className="admin-edit-wrapper" style={{
+                        display: 'none', // Hidden on desktop, shown on mobile via CSS
+                        position: 'absolute',
+                        bottom: '12px',
+                        right: '12px'
+                    }}>
+                        <Tooltip title="Edit Product (Admin)">
+                            <Button
+                                icon={<EditOutlined />}
+                                className="product-admin-edit-btn"
+                                style={{
+                                    backgroundColor: '#1890ff',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '50%',
+                                    width: '40px',
+                                    height: '40px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 2px 8px rgba(24, 144, 255, 0.3)'
+                                }}
+                            />
+                        </Tooltip>
+                    </div>
+                )}
+
+                {/* Plus Icon / Out of Stock - Shows inline on desktop, separate on mobile */}
                 {!user?.isAdmin && (
                     <div className="plus-icon-wrapper">
-                        {currentQuantity === 0 ? (
+                        {isOutOfStock ? (
+                            // Out of Stock Text
+                            <div style={{
+                                backgroundColor: '#fff1f0',
+                                color: '#bf1725ff',
+                                padding: '9px 12px',
+                                borderRadius: '16px',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                fontStyle: 'italic',
+                                border: '1px solid #ffccc7',
+                                whiteSpace: 'nowrap'
+                            }}>
+                                Out of Stock
+                            </div>
+                        ) : currentQuantity === 0 ? (
                             // Plus Button
                             <Button
                                 icon={<PlusOutlined />}
                                 onClick={handlePlusClick}
                                 shape="circle"
                                 size="small"
+                                className="add-cart-btn-mobile"
                                 style={{
                                     backgroundColor: 'white',
                                     border: '1px solid #e8e8e8',
@@ -103,7 +221,7 @@ const Product = ({ product }) => {
                             />
                         ) : (
                             // Quantity Controls
-                            <div style={{
+                            <div className="qty-controls-mobile" style={{
                                 backgroundColor: 'white',
                                 borderRadius: '16px',
                                 padding: '4px 8px',
@@ -137,14 +255,17 @@ const Product = ({ product }) => {
                                     onClick={increaseQuantity}
                                     size="small"
                                     shape="circle"
+                                    disabled={!canAddMore}
                                     style={{
                                         border: 'none',
-                                        color: '#1890ff',
+                                        color: canAddMore ? '#1890ff' : '#d9d9d9',
                                         fontSize: '10px',
                                         width: '20px',
                                         height: '20px',
                                         minWidth: '20px',
-                                        padding: 0
+                                        padding: 0,
+                                        cursor: canAddMore ? 'pointer' : 'not-allowed',
+                                        opacity: canAddMore ? 1 : 0.5
                                     }}
                                 />
                             </div>
@@ -153,8 +274,8 @@ const Product = ({ product }) => {
                 )}
             </div>
 
-            {/* 2. Rating */}
-            <div style={{ marginBottom: '8px' }}>
+            {/* 2. Rating Row */}
+            <div className="product-rating-row" style={{ marginBottom: '8px' }}>
                 <div>
                     <Rate
                         disabled
@@ -162,32 +283,67 @@ const Product = ({ product }) => {
                         value={product.rating || 0}
                         style={{ fontSize: '10px' }}
                     />
-                </div>
-                <div style={{ marginTop: '2px' }}>
-                    <Text type="secondary" style={{ fontSize: '9px' }}>
-                        ({product.numReviews || 0} reviews)
-                    </Text>
+                    <div style={{ marginTop: '2px' }}>
+                        <Text type="secondary" style={{ fontSize: '9px' }}>
+                            ({product.numReviews || 0} reviews)
+                        </Text>
+                    </div>
                 </div>
             </div>
 
             {/* 3. Price & Add to Cart Button (Horizontal) */}
-            <div style={{
+            <div className="product-price-row" style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: '12px',
                 minHeight: '36px'
             }}>
-                <Text
-                    strong
-                    style={{
-                        fontSize: '18px',
-                        color: '#262626',
-                        whiteSpace: 'nowrap'
-                    }}
-                >
-                    ₹{product.price.toFixed(0)}
-                </Text>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <div className="price-container-mobile">
+                        <Text
+                            strong
+                            className="product-price-text"
+                            style={{
+                                fontSize: '18px',
+                                color: '#262626',
+                                whiteSpace: 'nowrap'
+                            }}
+                        >
+                            ₹{(product.price * (1 - (product.discount || 0) / 100)).toFixed(0)}
+                        </Text>
+                        {/* Mobile-only: Original price with strikethrough */}
+                        {product.discount > 0 && (
+                            <Text
+                                className="original-price-mobile"
+                                type="secondary"
+                                delete
+                                style={{
+                                    fontSize: '13px',
+                                    marginLeft: '8px'
+                                }}
+                            >
+                                ₹{product.price.toFixed(0)}
+                            </Text>
+                        )}
+                    </div>
+
+                    {/* Desktop-only: Discount Badge (next to price) */}
+                    {product.discount > 0 && (
+                        <span className="discount-badge-desktop" style={{
+                            backgroundColor: '#fee2e2',
+                            color: '#dc2626',
+                            padding: '2px 8px',
+                            borderRadius: '10px',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            border: '1px solid #fca5a5',
+                            whiteSpace: 'nowrap'
+                        }}>
+                            -{product.discount}% OFF
+                        </span>
+                    )}
+                </div>
             </div>
         </Card>
     );

@@ -1,5 +1,5 @@
 // frontend/src/components/ProfilePage.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Button, Typography, Tabs, List, Form, Input, message, Popconfirm } from 'antd';
 import { LeftOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -102,6 +102,8 @@ const ShippingAddresses = ({ addresses, onAdd, onEdit, onDelete }) => {
                             <div style={{ marginBottom: "12px" }}>
                                 <Text strong style={{ fontSize: "15px", display: "block", marginBottom: "6px", wordBreak: "break-word", lineHeight: "1.4" }}>
                                     {item.address}, {item.city}
+                                    {item.district ? `, ${item.district}` : ''}
+                                    {item.state ? `, ${item.state}` : ''}
                                 </Text>
                             </div>
                             <div style={{ marginBottom: "6px", lineHeight: "1.5" }}>
@@ -126,7 +128,7 @@ const ProfilePage = () => {
     const [editingAddress, setEditingAddress] = useState(null);
     const { user, token, login } = useAuth();
 
-    const fetchAddresses = async () => {
+    const fetchAddresses = useCallback(async () => {
         if (!token) return;
         const config = { headers: { Authorization: `Bearer ${token}` } };
         try {
@@ -135,11 +137,11 @@ const ProfilePage = () => {
         } catch (error) {
             message.error('Could not fetch addresses.');
         }
-    };
+    }, [token]);
 
     useEffect(() => {
         fetchAddresses();
-    }, [token]);
+    }, [fetchAddresses]);
 
     const handleProfileUpdate = (updatedUser) => {
         // Re-use the login function to update the global state and local storage

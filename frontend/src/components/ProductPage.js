@@ -4,8 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import BackButton from './BackButton';
-import { Row, Col, Spin, Typography, Button, Image, Rate, Tag, Space, Card } from 'antd';
-import { ShoppingCartOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
+import { Row, Col, Spin, Typography, Button, Image, Rate, Tag, Space, Card, message } from 'antd';
+import { ShoppingCartOutlined, MinusOutlined, PlusOutlined, ShareAltOutlined } from '@ant-design/icons';
 import ProductReviews from './ProductReviews';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -19,7 +19,7 @@ const ProductPage = () => {
     const [selectedImage, setSelectedImage] = useState(null); // For image gallery
     const [previewVisible, setPreviewVisible] = useState(false); // For image preview modal
     const { id } = useParams();
-    const { addToCart } = useCart();
+    const { addToCart, cartItems } = useCart();
     const { user } = useAuth();
 
     // Combine main image and additional images
@@ -45,8 +45,20 @@ const ProductPage = () => {
         fetchProduct();
     }, [fetchProduct]);
 
+    // Stock management - check current cart quantity
+    const cartItem = cartItems.find(item => item._id === id);
+    const currentCartQuantity = cartItem ? cartItem.quantity : 0;
+    const availableStock = product?.stock || 0;
+    const isOutOfStock = availableStock === 0;
+    const canIncreaseQuantity = (quantity + currentCartQuantity) < availableStock;
+
     const increaseQuantity = () => {
-        setQuantity(prev => prev + 1);
+        if (canIncreaseQuantity) {
+            setQuantity(prev => prev + 1);
+        } else {
+            const remainingStock = availableStock - currentCartQuantity;
+            message.warning(`Limited stock! Only ${availableStock} units available total (${currentCartQuantity} already in cart).`);
+        }
     };
 
     const decreaseQuantity = () => {
@@ -55,12 +67,57 @@ const ProductPage = () => {
         }
     };
 
-    const handleAddToCart = () => {
-        if (user) {
-            for (let i = 0; i < quantity; i++) {
-                addToCart(product);
+    const handleShare = async () => {
+        const shareData = {
+            title: product.name,
+            text: `Check out ${product.name} - ₹${product.price}`,
+            url: window.location.href
+        };
+
+        try {
+            if (navigator.share) {
+                // Use Web Share API for mobile devices
+                await navigator.share(shareData);
+            } else {
+                // Fallback: Copy link to clipboard
+                await navigator.clipboard.writeText(window.location.href);
+                message.success('Product link copied to clipboard!');
+            }
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error('Error sharing:', error);
+                message.error('Failed to share product');
             }
         }
+    };
+
+    const handleAddToCart = () => {
+        if (!user) {
+            message.warning('Please log in to add items to cart');
+            return;
+        }
+
+        if (isOutOfStock) {
+            message.error('This product is out of stock');
+            return;
+        }
+
+        // Check if adding this quantity would exceed stock
+        const totalQuantity = currentCartQuantity + quantity;
+        if (totalQuantity > availableStock) {
+            const remainingStock = availableStock - currentCartQuantity;
+            if (remainingStock > 0) {
+                message.warning(`Only ${remainingStock} more units can be added. You already have ${currentCartQuantity} in cart.`);
+            } else {
+                message.warning(`You already have the maximum stock (${availableStock} units) in your cart.`);
+            }
+            return;
+        }
+
+        for (let i = 0; i < quantity; i++) {
+            addToCart(product);
+        }
+        message.success(`${quantity} item(s) added to cart!`);
     };
 
     if (loading) {
@@ -159,10 +216,20 @@ const ProductPage = () => {
                         <div>
 
 
-                            {/* Product Name and Stock Badge */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            {/* Product Name and Share Button */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                                 <Title level={2} style={{ margin: 0 }}>{product.name}</Title>
-                                <Tag color="green" style={{ fontSize: '12px' }}>In Stock</Tag>
+                                <Button
+                                    icon={<ShareAltOutlined />}
+                                    shape="circle"
+                                    size="large"
+                                    onClick={handleShare}
+                                    style={{
+                                        border: '1px solid #e5e7eb',
+                                        backgroundColor: '#f9fafb',
+                                        color: '#374151'
+                                    }}
+                                />
                             </div>
 
                             {/* Rating */}
@@ -173,15 +240,30 @@ const ProductPage = () => {
                                 </Space>
                             </div>
 
+                            {/* Discount Badge Only */}
+                            <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
+                                {product.discount > 0 && (
+                                    <Tag icon="🎉" color="green">
+                                        {product.discount}% Discount
+                                    </Tag>
+                                )}
+                            </div>
+
                             {/* Price */}
                             <div style={{ marginTop: '20px' }}>
                                 <Space align="baseline">
                                     <Text strong className="product-detail-price" style={{ fontSize: '32px', color: '#262626' }}>
-                                        ₹{product.price.toFixed(2)}
+                                        ₹{(product.price * (1 - (product.discount || 0) / 100)).toFixed(2)}
                                     </Text>
-                                    <Text delete type="secondary" style={{ fontSize: '20px' }}>
-                                        ₹{(product.price * 1.2).toFixed(2)}
-                                    </Text>
+                                    {product.discount ? (
+                                        <Text delete type="secondary" style={{ fontSize: '20px' }}>
+                                            ₹{product.price.toFixed(2)}
+                                        </Text>
+                                    ) : (
+                                        <Text delete type="secondary" style={{ fontSize: '20px' }}>
+                                            ₹{(product.price * 1.2).toFixed(2)}
+                                        </Text>
+                                    )}
                                 </Space>
                             </div>
 
@@ -189,6 +271,16 @@ const ProductPage = () => {
                             <Paragraph style={{ marginTop: '16px', color: '#666', lineHeight: '1.8' }}>
                                 {product.description || 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'}
                             </Paragraph>
+
+                            {/* Stock Status */}
+                            <div style={{ marginTop: '16px' }}>
+                                <Text strong>Stock: </Text>
+                                {isOutOfStock ? (
+                                    <Tag color="red">Out of Stock</Tag>
+                                ) : (
+                                    <Tag color="green">{availableStock} units available</Tag>
+                                )}
+                            </div>
 
                             {/* Quantity and Add to Cart */}
                             {!user?.isAdmin && (
@@ -223,10 +315,14 @@ const ProductPage = () => {
                                             <Button
                                                 icon={<PlusOutlined />}
                                                 onClick={increaseQuantity}
+                                                disabled={!canIncreaseQuantity || isOutOfStock}
                                                 style={{
                                                     border: 'none',
                                                     width: '40px',
-                                                    height: '40px'
+                                                    height: '40px',
+                                                    color: (canIncreaseQuantity && !isOutOfStock) ? '#1890ff' : '#d9d9d9',
+                                                    cursor: (canIncreaseQuantity && !isOutOfStock) ? 'pointer' : 'not-allowed',
+                                                    opacity: (canIncreaseQuantity && !isOutOfStock) ? 1 : 0.5
                                                 }}
                                             />
                                         </div>

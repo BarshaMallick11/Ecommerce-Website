@@ -50,6 +50,7 @@ router.put('/:id/status', protect, admin, async (req, res) => {
     try {
         const order = await Order.findById(req.params.id);
         if (order) {
+            const previousStatus = order.status;
             order.status = req.body.status || order.status;
             order.trackingNumber = req.body.trackingNumber || order.trackingNumber;
             order.estimatedDeliveryDate = req.body.estimatedDeliveryDate || order.estimatedDeliveryDate;
@@ -61,6 +62,17 @@ router.put('/:id/status', protect, admin, async (req, res) => {
                 order.deliveredAt = Date.now();
             } else if (req.body.status === 'Cancelled' && !order.cancelledAt) {
                 order.cancelledAt = Date.now();
+
+                // Restore stock when order is cancelled
+                const Product = require('../models/product.model');
+                for (const item of order.products) {
+                    await Product.findByIdAndUpdate(
+                        item.product._id || item.product,
+                        { $inc: { stock: item.quantity } },
+                        { new: true }
+                    );
+                }
+                console.log('Stock restored for cancelled order:', order._id);
             }
 
             const updatedOrder = await order.save();

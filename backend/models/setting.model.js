@@ -10,6 +10,11 @@ const settingSchema = new Schema({
     upiId: { type: String, default: 'yourname@okaxis' },
     upiQrCodeUrl: { type: String, default: '/upi-qr-code.png' },
     upiEnabled: { type: Boolean, default: true },
+
+    // Delivery Charge Settings
+    deliveryCharge: { type: Number, default: 40 },           // Default delivery charge in Rs
+    freeDeliveryThreshold: { type: Number, default: 399 },   // Free delivery above this amount
+    deliveryChargeEnabled: { type: Boolean, default: true },  // Enable/disable delivery charges
 });
 
 const Setting = mongoose.model('Setting', settingSchema);

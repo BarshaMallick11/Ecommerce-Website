@@ -72,6 +72,17 @@ router.put('/', protect, admin, async (req, res) => {
         settings.upiQrCodeUrl = req.body.upiQrCodeUrl || settings.upiQrCodeUrl;
         settings.upiEnabled = req.body.upiEnabled !== undefined ? req.body.upiEnabled : settings.upiEnabled;
 
+        // Delivery Charge Settings
+        if (req.body.deliveryCharge !== undefined) {
+            settings.deliveryCharge = req.body.deliveryCharge;
+        }
+        if (req.body.freeDeliveryThreshold !== undefined) {
+            settings.freeDeliveryThreshold = req.body.freeDeliveryThreshold;
+        }
+        if (req.body.deliveryChargeEnabled !== undefined) {
+            settings.deliveryChargeEnabled = req.body.deliveryChargeEnabled;
+        }
+
         const updatedSettings = await settings.save();
         res.json(updatedSettings);
     } catch (error) {

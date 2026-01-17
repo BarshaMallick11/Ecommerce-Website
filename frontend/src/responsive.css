@@ -8,6 +8,11 @@
     display: none;
 }
 
+/* Desktop offer banner - visible on desktop, hidden on mobile */
+.desktop-offer-banner {
+    display: block;
+}
+
 /* Media query for tablets and smaller devices */
 @media (max-width: 768px) {
     .desktop-nav-links {
@@ -20,5 +25,15 @@
 
     .cart-icon {
         font-size: 20px !important; /* This will make the icon smaller on mobile */
+    }
+
+    /* Hide desktop OfferBanner on mobile - BannerSlider is shown instead */
+    .desktop-offer-banner {
+        display: none !important;
+    }
+
+    /* Also hide the OfferBanner class itself on mobile */
+    .offer-banner {
+        display: none !important;
     }
 }
