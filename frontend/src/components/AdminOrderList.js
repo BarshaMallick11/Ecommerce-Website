@@ -6,126 +6,212 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import moment from 'moment';
 import AdminNav from './AdminNav';
+import jsPDF from 'jspdf';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-// Bill download function - generates PDF-like bill
+// Bill download function - generates PDF bill
 const generateBill = (order) => {
     // Calculate subtotal (total - delivery charge)
     const deliveryCharge = order.deliveryCharge || 0;
     const subtotal = order.totalAmount - deliveryCharge;
 
-    const billContent = `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Invoice - ${order._id}</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
-        .header { text-align: center; border-bottom: 2px solid #4f772d; padding-bottom: 20px; margin-bottom: 20px; }
-        .header h1 { color: #4f772d; margin: 0; }
-        .header p { color: #666; margin: 5px 0; }
-        .order-info { display: flex; justify-content: space-between; margin-bottom: 20px; }
-        .order-info div { flex: 1; }
-        .section-title { background: #f5f5f5; padding: 10px; font-weight: bold; margin: 15px 0 10px 0; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background: #4f772d; color: white; }
-        .totals { text-align: right; margin-top: 20px; }
-        .totals p { margin: 5px 0; }
-        .totals .grand-total { font-size: 18px; font-weight: bold; color: #4f772d; }
-        .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; }
-        .status-tag { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 12px; }
-        .status-processing { background: #e6f7ff; color: #1890ff; }
-        .status-shipped { background: #fff7e6; color: #fa8c16; }
-        .status-delivered { background: #f6ffed; color: #52c41a; }
-        .status-cancelled { background: #fff1f0; color: #f5222d; }
-        @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Premium.Store</h1>
-        <p>Tax Invoice / Bill of Supply</p>
-    </div>
+    // Create new PDF document
+    const doc = new jsPDF();
 
-    <div class="order-info">
-        <div>
-            <strong>Invoice No:</strong> ${order._id}<br>
-            <strong>Date:</strong> ${moment(order.createdAt).format('DD MMM YYYY, hh:mm A')}<br>
-            <strong>Payment Method:</strong> ${order.paymentMethod}<br>
-            <strong>Status:</strong> <span class="status-tag status-${order.status?.toLowerCase()}">${order.status}</span>
-        </div>
-        <div style="text-align: right;">
-            <strong>Ship To:</strong><br>
-            ${order.shippingAddress?.address || ''}<br>
-            ${order.shippingAddress?.city || ''}, ${order.shippingAddress?.postalCode || ''}<br>
-            ${order.shippingAddress?.state || ''}, ${order.shippingAddress?.country || ''}<br>
-            Phone: ${order.shippingAddress?.phoneNo || ''}
-        </div>
-    </div>
+    // Set font styles
+    let yPosition = 20;
 
-    <div class="section-title">Order Items</div>
-    <table>
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Product</th>
-                <th>Unit Price</th>
-                <th>Qty</th>
-                <th>Amount</th>
-            </tr>
-        </thead>
-        <tbody>
-            ${order.products?.map((item, index) => {
-                const product = item.product || item;
-                const price = product.price || 0;
-                const discount = product.discount || 0;
-                const discountedPrice = price * (1 - discount / 100);
-                const qty = item.quantity || item.qty || 1;
-                const amount = discountedPrice * qty;
-                return `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${product.name || 'Product'}</td>
-                        <td>₹${discountedPrice.toFixed(2)}${discount > 0 ? ` <small style="color:#999;text-decoration:line-through">₹${price.toFixed(2)}</small>` : ''}</td>
-                        <td>${qty} ${product.unit || 'unit'}${qty > 1 ? 's' : ''}</td>
-                        <td>₹${amount.toFixed(2)}</td>
-                    </tr>
-                `;
-            }).join('') || ''}
-        </tbody>
-    </table>
+    // Header - Store Name
+    doc.setFontSize(24);
+    doc.setTextColor(79, 119, 45); // #4f772d
+    doc.text('Premium.Store', 105, yPosition, { align: 'center' });
 
-    <div class="totals">
-        <p><strong>Subtotal:</strong> ₹${subtotal.toFixed(2)}</p>
-        <p><strong>Delivery Charge:</strong> ${deliveryCharge > 0 ? '₹' + deliveryCharge.toFixed(2) : 'FREE'}</p>
-        <p class="grand-total"><strong>Grand Total:</strong> ₹${order.totalAmount.toFixed(2)}</p>
-    </div>
+    yPosition += 8;
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Tax Invoice / Bill of Supply', 105, yPosition, { align: 'center' });
 
-    ${order.trackingNumber ? `<p><strong>Tracking Number:</strong> ${order.trackingNumber}</p>` : ''}
-    ${order.estimatedDeliveryDate ? `<p><strong>Estimated Delivery:</strong> ${moment(order.estimatedDeliveryDate).format('DD MMM YYYY')}</p>` : ''}
+    // Line separator
+    yPosition += 5;
+    doc.setDrawColor(79, 119, 45);
+    doc.setLineWidth(0.5);
+    doc.line(20, yPosition, 190, yPosition);
 
-    <div class="footer">
-        <p>Thank you for shopping with Premium.Store!</p>
-        <p style="font-size: 12px;">This is a computer-generated invoice and does not require a signature.</p>
-    </div>
-</body>
-</html>
-    `;
+    // Order Information
+    yPosition += 10;
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
 
-    // Create and download
-    const blob = new Blob([billContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Invoice_${order._id.substring(order._id.length - 6)}_${moment(order.createdAt).format('DDMMYYYY')}.html`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    message.success('Bill downloaded successfully!');
+    // Left column - Order details
+    doc.setFont(undefined, 'bold');
+    doc.text('Invoice No:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(order._id, 50, yPosition);
+
+    yPosition += 6;
+    doc.setFont(undefined, 'bold');
+    doc.text('Customer:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(order.user?.username || 'Guest', 50, yPosition);
+
+    yPosition += 6;
+    doc.setFont(undefined, 'bold');
+    doc.text('Date:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(moment(order.createdAt).format('DD MMM YYYY, hh:mm A'), 50, yPosition);
+
+    yPosition += 6;
+    doc.setFont(undefined, 'bold');
+    doc.text('Payment Method:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(order.paymentMethod, 50, yPosition);
+
+    // Right column - Shipping address
+    let rightYPosition = 43;
+    doc.setFont(undefined, 'bold');
+    doc.text('Ship To:', 120, rightYPosition);
+
+    rightYPosition += 6;
+    doc.setFont(undefined, 'normal');
+    doc.text(order.shippingAddress?.address || '', 120, rightYPosition, { maxWidth: 70 });
+
+    rightYPosition += 6;
+    doc.text(`${order.shippingAddress?.city || ''}, ${order.shippingAddress?.postalCode || ''}`, 120, rightYPosition);
+
+    rightYPosition += 6;
+    doc.text(`${order.shippingAddress?.state || ''}, ${order.shippingAddress?.country || ''}`, 120, rightYPosition);
+
+    rightYPosition += 6;
+    doc.text(`Phone: ${order.shippingAddress?.phoneNo || ''}`, 120, rightYPosition);
+
+    // Order Items Section
+    yPosition += 15;
+    doc.setFillColor(245, 245, 245);
+    doc.rect(20, yPosition, 170, 8, 'F');
+    doc.setFont(undefined, 'bold');
+    doc.text('Order Items', 22, yPosition + 5);
+
+    // Table header
+    yPosition += 12;
+    doc.setFillColor(79, 119, 45);
+    doc.setTextColor(255, 255, 255);
+    doc.rect(20, yPosition - 5, 170, 8, 'F');
+
+    doc.setFontSize(9);
+    doc.text('#', 22, yPosition);
+    doc.text('Product', 30, yPosition);
+    doc.text('Unit Price', 100, yPosition);
+    doc.text('Qty', 135, yPosition);
+    doc.text('Amount', 165, yPosition);
+
+    // Table rows
+    yPosition += 6;
+    doc.setTextColor(0, 0, 0);
+    doc.setFont(undefined, 'normal');
+
+    order.products?.forEach((item, index) => {
+        const product = item.product || item;
+        const price = product.price || 0;
+        const discount = product.discount || 0;
+        const discountedPrice = price * (1 - discount / 100);
+        const qty = item.quantity || item.qty || 1;
+        const amount = discountedPrice * qty;
+        const unit = product.unit || 'unit';
+
+        if (yPosition > 270) { // Check if we need a new page
+            doc.addPage();
+            yPosition = 20;
+        }
+
+        doc.text((index + 1).toString(), 22, yPosition);
+        doc.text(product.name || 'Product', 30, yPosition, { maxWidth: 65 });
+        doc.text(`Rs. ${discountedPrice.toFixed(2)}`, 100, yPosition);
+        doc.text(`${qty} ${unit}${qty > 1 ? 's' : ''}`, 135, yPosition);
+        doc.text(`Rs. ${amount.toFixed(2)}`, 165, yPosition);
+
+        yPosition += 6;
+    });
+
+    // Draw table border
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.1);
+    doc.line(20, yPosition, 190, yPosition);
+
+    // Totals Section
+    yPosition += 10;
+    doc.setFontSize(10);
+
+    doc.setFont(undefined, 'bold');
+    doc.text('Subtotal:', 120, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Rs. ${subtotal.toFixed(2)}`, 190, yPosition, { align: 'right' });
+
+    yPosition += 6;
+    doc.setFont(undefined, 'bold');
+    doc.text('Delivery Charge:', 120, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(deliveryCharge > 0 ? `Rs. ${deliveryCharge.toFixed(2)}` : 'FREE', 190, yPosition, { align: 'right' });
+
+    yPosition += 2;
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+    doc.line(120, yPosition, 190, yPosition);
+
+    yPosition += 6;
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(79, 119, 45);
+    doc.text('Grand Total:', 120, yPosition);
+    doc.text(`Rs. ${order.totalAmount.toFixed(2)}`, 190, yPosition, { align: 'right' });
+
+    // Additional Info
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont(undefined, 'normal');
+
+    if (order.trackingNumber) {
+        yPosition += 10;
+        doc.setFont(undefined, 'bold');
+        doc.text('Tracking Number:', 20, yPosition);
+        doc.setFont(undefined, 'normal');
+        doc.text(order.trackingNumber, 60, yPosition);
+    }
+
+    if (order.estimatedDeliveryDate) {
+        yPosition += 6;
+        doc.setFont(undefined, 'bold');
+        doc.text('Estimated Delivery:', 20, yPosition);
+        doc.setFont(undefined, 'normal');
+        doc.text(moment(order.estimatedDeliveryDate).format('DD MMM YYYY'), 60, yPosition);
+    }
+
+    // Footer
+    yPosition = 280;
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.1);
+    doc.line(20, yPosition, 190, yPosition);
+
+    yPosition += 5;
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Thank you for shopping with Premium.Store!', 105, yPosition, { align: 'center' });
+
+    yPosition += 5;
+    doc.setFontSize(8);
+    doc.text('This is a computer-generated invoice and does not require a signature.', 105, yPosition, { align: 'center' });
+
+    // Save the PDF
+    const fileName = `Invoice_${order._id.substring(order._id.length - 6)}_${moment(order.createdAt).format('DDMMYYYY')}.pdf`;
+    doc.save(fileName);
+
+    // Open the PDF in a new window
+    const pdfBlob = doc.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    window.open(pdfUrl, '_blank');
+
+    message.success('Bill downloaded and opened successfully!');
 };
 
 const AdminOrderList = () => {

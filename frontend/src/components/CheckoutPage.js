@@ -15,7 +15,7 @@ const CheckoutPage = () => {
     const { cartItems, clearCart } = useCart();
     const { user, token } = useAuth();
     const navigate = useNavigate();
-    const [paymentMethod, setPaymentMethod] = useState('Razorpay');
+    const [paymentMethod, setPaymentMethod] = useState('');
     const [upiModalVisible, setUpiModalVisible] = useState(false);
     const [pendingOrderId, setPendingOrderId] = useState(null);
     const [deliverySettings, setDeliverySettings] = useState({
@@ -23,8 +23,13 @@ const CheckoutPage = () => {
         freeDeliveryThreshold: 399,
         deliveryChargeEnabled: true
     });
+    const [paymentMethodSettings, setPaymentMethodSettings] = useState({
+        razorpayEnabled: true,
+        upiManualEnabled: true,
+        codEnabled: true
+    });
 
-    // Fetch delivery settings
+    // Fetch delivery and payment method settings
     useEffect(() => {
         const fetchSettings = async () => {
             try {
@@ -34,12 +39,30 @@ const CheckoutPage = () => {
                     freeDeliveryThreshold: data.freeDeliveryThreshold || 399,
                     deliveryChargeEnabled: data.deliveryChargeEnabled !== false
                 });
+
+                const paymentSettings = {
+                    razorpayEnabled: data.razorpayEnabled === undefined ? true : data.razorpayEnabled,
+                    upiManualEnabled: data.upiManualEnabled === undefined ? true : data.upiManualEnabled,
+                    codEnabled: data.codEnabled === undefined ? true : data.codEnabled
+                };
+                setPaymentMethodSettings(paymentSettings);
+
+                // Set default payment method to first enabled method
+                if (!paymentMethod) {
+                    if (paymentSettings.razorpayEnabled) {
+                        setPaymentMethod('Razorpay');
+                    } else if (paymentSettings.upiManualEnabled) {
+                        setPaymentMethod('UPI');
+                    } else if (paymentSettings.codEnabled) {
+                        setPaymentMethod('COD');
+                    }
+                }
             } catch (error) {
                 console.error('Failed to fetch settings');
             }
         };
         fetchSettings();
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Calculate subtotal using discounted price
     const subtotal = cartItems.reduce((sum, item) => {
@@ -167,18 +190,38 @@ const CheckoutPage = () => {
             <BackButton />
             <Title level={2}>Checkout</Title>
             <Title level={4}>Payment Method</Title>
-            <Radio.Group onChange={(e) => setPaymentMethod(e.target.value)} value={paymentMethod} style={{ marginBottom: 24 }}>
-                <Space direction="vertical">
-                    <Radio value="Razorpay">Pay Online with Razorpay</Radio>
-                    <Radio value="UPI">
-                        Pay via UPI (Manual)
-                        <span style={{ fontSize: 12, color: '#888', marginLeft: 8 }}>
-                            ₹0 fees • No gateway
-                        </span>
-                    </Radio>
-                    <Radio value="COD">Cash on Delivery (COD)</Radio>
-                </Space>
-            </Radio.Group>
+            {!paymentMethodSettings.razorpayEnabled && !paymentMethodSettings.upiManualEnabled && !paymentMethodSettings.codEnabled ? (
+                <div style={{
+                    background: '#fff1f0',
+                    padding: '16px',
+                    borderRadius: '8px',
+                    border: '1px solid #ffa39e',
+                    marginBottom: 24
+                }}>
+                    <Text type="danger">
+                        <strong>No payment methods available.</strong> Please contact the store administrator.
+                    </Text>
+                </div>
+            ) : (
+                <Radio.Group onChange={(e) => setPaymentMethod(e.target.value)} value={paymentMethod} style={{ marginBottom: 24 }}>
+                    <Space direction="vertical">
+                        {paymentMethodSettings.razorpayEnabled && (
+                            <Radio value="Razorpay">Pay Online with Razorpay</Radio>
+                        )}
+                        {paymentMethodSettings.upiManualEnabled && (
+                            <Radio value="UPI">
+                                Pay via UPI (Manual)
+                                <span style={{ fontSize: 12, color: '#888', marginLeft: 8 }}>
+                                    ₹0 fees • No gateway
+                                </span>
+                            </Radio>
+                        )}
+                        {paymentMethodSettings.codEnabled && (
+                            <Radio value="COD">Cash on Delivery (COD)</Radio>
+                        )}
+                    </Space>
+                </Radio.Group>
+            )}
 
             {/* Bill Details Card */}
             <Card style={{ marginBottom: 24, borderRadius: '12px' }}>
@@ -230,6 +273,7 @@ const CheckoutPage = () => {
                 type="primary"
                 size="large"
                 onClick={handlePlaceOrder}
+                disabled={!paymentMethod || (!paymentMethodSettings.razorpayEnabled && !paymentMethodSettings.upiManualEnabled && !paymentMethodSettings.codEnabled)}
                 block
                 style={{
                     height: '48px',

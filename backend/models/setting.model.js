@@ -19,6 +19,11 @@ const settingSchema = new Schema({
     // Order Limit Settings
     maxQuantityPerProduct: { type: Number, default: 5, min: 1, max: 100 },  // Max units per product per order
     orderLimitEnabled: { type: Boolean, default: true },      // Enable/disable order limits
+
+    // Payment Method Settings
+    razorpayEnabled: { type: Boolean, default: true },       // Enable/disable Razorpay online payments
+    upiManualEnabled: { type: Boolean, default: true },       // Enable/disable UPI manual payments
+    codEnabled: { type: Boolean, default: true },             // Enable/disable Cash on Delivery
 });
 
 const Setting = mongoose.model('Setting', settingSchema);

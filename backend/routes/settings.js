@@ -91,6 +91,17 @@ router.put('/', protect, admin, async (req, res) => {
             settings.orderLimitEnabled = req.body.orderLimitEnabled;
         }
 
+        // Payment Method Settings
+        if (req.body.razorpayEnabled !== undefined) {
+            settings.razorpayEnabled = req.body.razorpayEnabled;
+        }
+        if (req.body.upiManualEnabled !== undefined) {
+            settings.upiManualEnabled = req.body.upiManualEnabled;
+        }
+        if (req.body.codEnabled !== undefined) {
+            settings.codEnabled = req.body.codEnabled;
+        }
+
         const updatedSettings = await settings.save();
         res.json(updatedSettings);
     } catch (error) {

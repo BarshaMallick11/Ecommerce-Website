@@ -32,7 +32,11 @@ const AdminSettings = () => {
                     deliveryChargeEnabled: data.deliveryChargeEnabled !== false,
                     // Order Limit Settings
                     maxQuantityPerProduct: data.maxQuantityPerProduct || 5,
-                    orderLimitEnabled: data.orderLimitEnabled !== false
+                    orderLimitEnabled: data.orderLimitEnabled !== false,
+                    // Payment Method Settings
+                    razorpayEnabled: data.razorpayEnabled === undefined ? true : data.razorpayEnabled,
+                    upiManualEnabled: data.upiManualEnabled === undefined ? true : data.upiManualEnabled,
+                    codEnabled: data.codEnabled === undefined ? true : data.codEnabled
                 });
                 // Set QR code preview if exists
                 if (data.upiQrCodeUrl) {
@@ -330,6 +334,55 @@ const AdminSettings = () => {
                                     {form.getFieldValue('maxQuantityPerProduct') || 5} units
                                 </Text>{' '}
                                 per product.
+                            </Text>
+                        </div>
+                    </Card>
+
+                    {/* Payment Method Settings */}
+                    <Card style={{ marginBottom: 24 }}>
+                        <Title level={5}>
+                            💳 Payment Methods
+                        </Title>
+                        <Paragraph type="secondary">
+                            Enable or disable payment methods available to customers during checkout.
+                        </Paragraph>
+
+                        <Form.Item
+                            name="razorpayEnabled"
+                            label="Razorpay (Online Payments)"
+                            valuePropName="checked"
+                            extra="Accept online payments via Razorpay payment gateway (Credit/Debit Cards, UPI, Wallets)"
+                        >
+                            <Switch />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="upiManualEnabled"
+                            label="UPI Manual Pay"
+                            valuePropName="checked"
+                            extra="Allow customers to pay via UPI by scanning QR code and uploading payment proof"
+                        >
+                            <Switch />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="codEnabled"
+                            label="Cash on Delivery (COD)"
+                            valuePropName="checked"
+                            extra="Enable COD option for customers to pay at the time of delivery"
+                        >
+                            <Switch />
+                        </Form.Item>
+
+                        <div style={{
+                            background: '#e6f7ff',
+                            padding: '12px',
+                            borderRadius: '8px',
+                            border: '1px solid #91d5ff',
+                            marginTop: 16
+                        }}>
+                            <Text>
+                                <strong>Note:</strong> At least one payment method must be enabled. Disabled payment options will be hidden from customers at checkout.
                             </Text>
                         </div>
                     </Card>
