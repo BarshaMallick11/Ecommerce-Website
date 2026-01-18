@@ -1,10 +1,11 @@
 // frontend/src/components/AdminQueryList.js
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { List, Card, Button, Typography, message, Tag, Spin } from 'antd'; // Removed Menu
+import { List, Card, Button, Typography, message, Tag, Spin, Space, Popconfirm } from 'antd';
+import { DeleteOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import AdminNav from './AdminNav'; // <-- IMPORT THE NEW COMPONENT
+import AdminNav from './AdminNav';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -41,6 +42,17 @@ const AdminQueryList = () => {
         }
     };
 
+    const handleDelete = async (id) => {
+        try {
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            await axios.delete(`${process.env.REACT_APP_API_URL}/api/queries/${id}`, config);
+            message.success('Query deleted successfully');
+            fetchQueries();
+        } catch (error) {
+            message.error('Failed to delete query');
+        }
+    };
+
     return (
         <div>
             <Title level={2}>Admin Dashboard</Title>
@@ -56,7 +68,21 @@ const AdminQueryList = () => {
                         <List.Item>
                             <Card
                                 title={query.name}
-                                extra={<Tag color={query.isResolved ? 'green' : 'volcano'}>{query.isResolved ? 'Resolved' : 'Pending'}</Tag>}
+                                extra={
+                                    <Space>
+                                        <Tag color={query.isResolved ? 'green' : 'volcano'}>{query.isResolved ? 'Resolved' : 'Pending'}</Tag>
+                                        <Popconfirm
+                                            title="Delete Query"
+                                            description="Are you sure to delete this query?"
+                                            onConfirm={() => handleDelete(query._id)}
+                                            okText="Yes"
+                                            cancelText="No"
+                                            icon={<DeleteOutlined style={{ color: 'red' }} />}
+                                        >
+                                            <Button type="text" danger icon={<DeleteOutlined />}/>
+                                        </Popconfirm>
+                                    </Space>
+                                }
                             >
                                 <p><Text strong>Email:</Text> {query.email}</p>
                                 {query.orderId && <p><Text strong>Order ID:</Text> {query.orderId}</p>}

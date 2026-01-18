@@ -1,40 +1,26 @@
 // frontend/src/components/CartPage.js
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 import BackButton from './BackButton';
 import { List, Button, Typography, Row, Col, Empty, Space, Avatar, Tooltip, Tag, Card, Divider, message } from 'antd';
 import { DeleteOutlined, PlusOutlined, MinusOutlined, EditOutlined, CarOutlined, GiftOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 
 const { Title, Text } = Typography;
 
 const CartPage = () => {
     const { cartItems, removeFromCart, addToCart, decreaseQuantity } = useCart();
     const { user } = useAuth();
-    const [deliverySettings, setDeliverySettings] = useState({
-        deliveryCharge: 40,
-        freeDeliveryThreshold: 399,
-        deliveryChargeEnabled: true
-    });
+    const { settings } = useSettings();
 
-    // Fetch delivery settings
-    useEffect(() => {
-        const fetchSettings = async () => {
-            try {
-                const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/settings`);
-                setDeliverySettings({
-                    deliveryCharge: data.deliveryCharge || 40,
-                    freeDeliveryThreshold: data.freeDeliveryThreshold || 399,
-                    deliveryChargeEnabled: data.deliveryChargeEnabled !== false
-                });
-            } catch (error) {
-                console.error('Failed to fetch settings');
-            }
-        };
-        fetchSettings();
-    }, []);
+    // Use settings from context
+    const deliverySettings = {
+        deliveryCharge: settings.deliveryCharge,
+        freeDeliveryThreshold: settings.freeDeliveryThreshold,
+        deliveryChargeEnabled: settings.deliveryChargeEnabled
+    };
 
     // Calculate subtotal using discounted price
     const subtotal = cartItems.reduce((sum, item) => {
@@ -77,14 +63,23 @@ const CartPage = () => {
 
                     // Stock validation
                     const availableStock = item.stock || 0;
-                    const canAddMore = item.quantity < availableStock;
+
+                    // Order limit validation
+                    const maxOrderLimit = settings.orderLimitEnabled ? settings.maxQuantityPerProduct : Infinity;
+                    const effectiveMax = Math.min(availableStock, maxOrderLimit);
+                    const canAddMore = item.quantity < effectiveMax;
+                    const isAtOrderLimit = settings.orderLimitEnabled && item.quantity >= maxOrderLimit;
 
                     const handleAddToCart = () => {
-                        if (canAddMore) {
-                            addToCart(item);
-                        } else {
-                            message.warning(`Limited stock! Only ${availableStock} units available.`);
+                        if (!canAddMore) {
+                            if (isAtOrderLimit) {
+                                message.warning(`Maximum ${maxOrderLimit} units allowed per product.`);
+                            } else {
+                                message.warning(`Limited stock! Only ${availableStock} units available.`);
+                            }
+                            return;
                         }
+                        addToCart(item);
                     };
 
                     return (
@@ -98,7 +93,7 @@ const CartPage = () => {
                                         </Button>
                                     </Tooltip>
                                 ),
-                                <Button type="text" danger icon={<DeleteOutlined />} onClick={() => removeFromCart(item._id)}>
+                                <Button type="text" danger icon={<DeleteOutlined />} onClick={() => removeFromCart(item._id, item.selectedVariant?._id)}>
                                     Remove
                                 </Button>
                             ]}
@@ -107,11 +102,20 @@ const CartPage = () => {
                                 <Col xs={24} sm={12} md={9}>
                                     <List.Item.Meta
                                         avatar={<Avatar shape="square" size={64} src={item.image} />}
-                                        title={<Link to={`/product/${item._id}`}>{item.name}</Link>}
+                                        title={
+                                            <Space direction="vertical" size={0}>
+                                                <Link to={`/product/${item._id}`}>{item.name}</Link>
+                                                {item.selectedVariant && (
+                                                    <Tag color="blue" style={{ marginTop: 4 }}>
+                                                        {item.selectedVariant.label}
+                                                    </Tag>
+                                                )}
+                                            </Space>
+                                        }
                                         description={
                                             <Space direction="vertical" size={0}>
                                                 <Text type="secondary">Price: ₹{item.price.toFixed(2)}</Text>
-                                                {item.quantity && <Text type="secondary">Stock: {item.quantity}</Text>}
+                                                {item.variantLabel && <Text type="secondary">Pack: {item.variantLabel}</Text>}
                                             </Space>
                                         }
                                     />
@@ -131,7 +135,7 @@ const CartPage = () => {
 
                                 <Col xs={12} sm={6} md={5} style={{ textAlign: 'center' }}>
                                     <Space>
-                                        <Button size="small" shape="circle" icon={<MinusOutlined />} onClick={() => decreaseQuantity(item._id)} />
+                                        <Button size="small" shape="circle" icon={<MinusOutlined />} onClick={() => decreaseQuantity(item._id, item.selectedVariant?._id)} />
                                         <Text strong>{item.quantity}</Text>
                                         <Button
                                             size="small"

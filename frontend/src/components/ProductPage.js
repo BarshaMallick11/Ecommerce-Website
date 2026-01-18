@@ -9,6 +9,7 @@ import { ShoppingCartOutlined, MinusOutlined, PlusOutlined, ShareAltOutlined } f
 import ProductReviews from './ProductReviews';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -18,9 +19,11 @@ const ProductPage = () => {
     const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState(null); // For image gallery
     const [previewVisible, setPreviewVisible] = useState(false); // For image preview modal
+    const [selectedVariant, setSelectedVariant] = useState(null); // For unit variant selection
     const { id } = useParams();
     const { addToCart, cartItems } = useCart();
     const { user } = useAuth();
+    const { settings } = useSettings();
 
     // Combine main image and additional images
     const allImages = product ? [
@@ -34,6 +37,12 @@ const ProductPage = () => {
             const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/products/${id}`);
             setProduct(data);
             setSelectedImage(data.image); // Set main image as selected by default
+
+            // Set default variant if product has variants
+            if (data.hasVariants && data.unitVariants && data.unitVariants.length > 0) {
+                const defaultVariant = data.unitVariants.find(v => v.isDefault) || data.unitVariants[0];
+                setSelectedVariant(defaultVariant);
+            }
         } catch (error) {
             console.error("Failed to fetch product", error);
         } finally {
@@ -45,19 +54,61 @@ const ProductPage = () => {
         fetchProduct();
     }, [fetchProduct]);
 
-    // Stock management - check current cart quantity
-    const cartItem = cartItems.find(item => item._id === id);
+    // Get current price and stock based on selected variant
+    const getCurrentPrice = () => {
+        if (product?.hasVariants && selectedVariant) {
+            return selectedVariant.price;
+        }
+        return product?.price || 0;
+    };
+
+    const getCurrentStock = () => {
+        if (product?.hasVariants && selectedVariant) {
+            return selectedVariant.stock || 0;
+        }
+        return product?.stock || 0;
+    };
+
+    const getCurrentLabel = () => {
+        if (product?.hasVariants && selectedVariant) {
+            return selectedVariant.label;
+        }
+        return product?.quantity ? `${product.quantity}${product.unit || 'Kg'}` : '';
+    };
+
+    // Stock management - check current cart quantity (considering variant)
+    const getCartItemKey = () => {
+        if (product?.hasVariants && selectedVariant) {
+            return `${id}_${selectedVariant._id}`;
+        }
+        return id;
+    };
+
+    const cartItem = cartItems.find(item => {
+        if (product?.hasVariants && selectedVariant) {
+            return item._id === id && item.selectedVariant?._id === selectedVariant._id;
+        }
+        return item._id === id;
+    });
     const currentCartQuantity = cartItem ? cartItem.quantity : 0;
-    const availableStock = product?.stock || 0;
+    const availableStock = getCurrentStock();
     const isOutOfStock = availableStock === 0;
-    const canIncreaseQuantity = (quantity + currentCartQuantity) < availableStock;
+
+    // Order limit management
+    const maxOrderLimit = settings.orderLimitEnabled ? settings.maxQuantityPerProduct : Infinity;
+    const effectiveMax = Math.min(availableStock, maxOrderLimit);
+    const canIncreaseQuantity = (quantity + currentCartQuantity) < effectiveMax;
+    const isAtOrderLimit = settings.orderLimitEnabled && (quantity + currentCartQuantity) >= maxOrderLimit;
 
     const increaseQuantity = () => {
         if (canIncreaseQuantity) {
             setQuantity(prev => prev + 1);
         } else {
-            const remainingStock = availableStock - currentCartQuantity;
-            message.warning(`Limited stock! Only ${availableStock} units available total (${currentCartQuantity} already in cart).`);
+            if (isAtOrderLimit) {
+                message.warning(`Maximum ${maxOrderLimit} units allowed per product.`);
+            } else {
+                message.warning(`Limited stock! Only ${availableStock} units available total (${currentCartQuantity} already in cart).`);
+            }
         }
     };
 
@@ -102,8 +153,21 @@ const ProductPage = () => {
             return;
         }
 
-        // Check if adding this quantity would exceed stock
+        // Check if adding this quantity would exceed stock or order limit
         const totalQuantity = currentCartQuantity + quantity;
+
+        // Check order limit first
+        if (settings.orderLimitEnabled && totalQuantity > maxOrderLimit) {
+            const remaining = maxOrderLimit - currentCartQuantity;
+            if (remaining > 0) {
+                message.warning(`Maximum ${maxOrderLimit} units allowed per product. You can add ${remaining} more.`);
+            } else {
+                message.warning(`Maximum limit of ${maxOrderLimit} units reached for this product.`);
+            }
+            return;
+        }
+
+        // Check stock limit
         if (totalQuantity > availableStock) {
             const remainingStock = availableStock - currentCartQuantity;
             if (remainingStock > 0) {
@@ -114,10 +178,22 @@ const ProductPage = () => {
             return;
         }
 
+        // Create product object with variant info if applicable
+        const productToAdd = {
+            ...product,
+            // Override price and stock with selected variant values
+            price: getCurrentPrice(),
+            stock: getCurrentStock(),
+            selectedVariant: selectedVariant || null,
+            variantLabel: getCurrentLabel()
+        };
+
         for (let i = 0; i < quantity; i++) {
-            addToCart(product);
+            addToCart(productToAdd);
         }
-        message.success(`${quantity} item(s) added to cart!`);
+
+        const variantInfo = selectedVariant ? ` (${selectedVariant.label})` : '';
+        message.success(`${quantity} item(s)${variantInfo} added to cart!`);
     };
 
     if (loading) {
@@ -249,20 +325,109 @@ const ProductPage = () => {
                                 )}
                             </div>
 
-                            {/* Price */}
+                            {/* Unit Variant Selector - Like Modern Grocery Apps */}
+                            {product.hasVariants && product.unitVariants && product.unitVariants.length > 0 && (
+                                <div style={{ marginTop: '20px' }}>
+                                    <Text strong style={{ fontSize: '14px', color: '#555', marginBottom: '12px', display: 'block' }}>
+                                        Select Size / Pack:
+                                    </Text>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                                        {product.unitVariants.map((variant) => {
+                                            const isSelected = selectedVariant?._id === variant._id;
+                                            const variantOutOfStock = (variant.stock || 0) === 0;
+                                            const discountedPrice = variant.price * (1 - (product.discount || 0) / 100);
+
+                                            return (
+                                                <div
+                                                    key={variant._id}
+                                                    onClick={() => !variantOutOfStock && setSelectedVariant(variant)}
+                                                    style={{
+                                                        padding: '12px 16px',
+                                                        borderRadius: '12px',
+                                                        border: isSelected ? '2px solid #52c41a' : '1px solid #e8e8e8',
+                                                        backgroundColor: variantOutOfStock ? '#f5f5f5' : isSelected ? '#f6ffed' : '#fff',
+                                                        cursor: variantOutOfStock ? 'not-allowed' : 'pointer',
+                                                        opacity: variantOutOfStock ? 0.6 : 1,
+                                                        transition: 'all 0.2s ease',
+                                                        minWidth: '100px',
+                                                        textAlign: 'center',
+                                                        position: 'relative',
+                                                        boxShadow: isSelected ? '0 2px 8px rgba(82, 196, 26, 0.2)' : 'none'
+                                                    }}
+                                                >
+                                                    {isSelected && (
+                                                        <div style={{
+                                                            position: 'absolute',
+                                                            top: '-8px',
+                                                            right: '-8px',
+                                                            backgroundColor: '#52c41a',
+                                                            color: '#fff',
+                                                            borderRadius: '50%',
+                                                            width: '20px',
+                                                            height: '20px',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            fontSize: '12px'
+                                                        }}>
+                                                            ✓
+                                                        </div>
+                                                    )}
+                                                    <div style={{
+                                                        fontWeight: 600,
+                                                        fontSize: '15px',
+                                                        color: variantOutOfStock ? '#999' : '#333'
+                                                    }}>
+                                                        {variant.label}
+                                                    </div>
+                                                    <div style={{
+                                                        marginTop: '4px',
+                                                        fontSize: '16px',
+                                                        fontWeight: 700,
+                                                        color: variantOutOfStock ? '#999' : '#52c41a'
+                                                    }}>
+                                                        ₹{discountedPrice.toFixed(0)}
+                                                    </div>
+                                                    {product.discount > 0 && (
+                                                        <div style={{
+                                                            fontSize: '12px',
+                                                            color: '#999',
+                                                            textDecoration: 'line-through'
+                                                        }}>
+                                                            ₹{variant.price.toFixed(0)}
+                                                        </div>
+                                                    )}
+                                                    {variantOutOfStock && (
+                                                        <Tag color="red" style={{ marginTop: '4px', fontSize: '10px' }}>
+                                                            Out of Stock
+                                                        </Tag>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Price - Dynamic based on variant selection */}
                             <div style={{ marginTop: '20px' }}>
                                 <Space align="baseline">
                                     <Text strong className="product-detail-price" style={{ fontSize: '32px', color: '#262626' }}>
-                                        ₹{(product.price * (1 - (product.discount || 0) / 100)).toFixed(2)}
+                                        ₹{(getCurrentPrice() * (1 - (product.discount || 0) / 100)).toFixed(2)}
                                     </Text>
                                     {product.discount ? (
                                         <Text delete type="secondary" style={{ fontSize: '20px' }}>
-                                            ₹{product.price.toFixed(2)}
+                                            ₹{getCurrentPrice().toFixed(2)}
                                         </Text>
                                     ) : (
                                         <Text delete type="secondary" style={{ fontSize: '20px' }}>
-                                            ₹{(product.price * 1.2).toFixed(2)}
+                                            ₹{(getCurrentPrice() * 1.2).toFixed(2)}
                                         </Text>
+                                    )}
+                                    {getCurrentLabel() && (
+                                        <Tag color="blue" style={{ marginLeft: '8px' }}>
+                                            {getCurrentLabel()}
+                                        </Tag>
                                     )}
                                 </Space>
                             </div>
@@ -281,6 +446,24 @@ const ProductPage = () => {
                                     <Tag color="green">{availableStock} units available</Tag>
                                 )}
                             </div>
+
+                            {/* Order Limit Info */}
+                            {settings.orderLimitEnabled && !isOutOfStock && (
+                                <div style={{
+                                    marginTop: '12px',
+                                    padding: '8px 12px',
+                                    backgroundColor: '#fff7e6',
+                                    borderRadius: '6px',
+                                    border: '1px solid #ffd591'
+                                }}>
+                                    <Text style={{ fontSize: '13px', color: '#d46b08' }}>
+                                        <strong>Order Limit:</strong> Max {settings.maxQuantityPerProduct} units per order
+                                        {currentCartQuantity > 0 && (
+                                            <span> ({currentCartQuantity} already in cart)</span>
+                                        )}
+                                    </Text>
+                                </div>
+                            )}
 
                             {/* Quantity and Add to Cart */}
                             {!user?.isAdmin && (

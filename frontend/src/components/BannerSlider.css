@@ -21,7 +21,7 @@
 
 .banner-slider {
     overflow: hidden;
-    border-radius: 12px;
+    border-radius: px;
     touch-action: pan-y pinch-zoom;
 }
 
@@ -229,6 +229,13 @@
 @media (max-width: 480px) {
     .banner-slider-wrapper {
         margin: 14px 0;
+        /* Make banner slightly narrower on mobile with padding on sides */
+        width: calc(100vw - 100px);
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: calc(-50vw + 50px);
+        margin-right: calc(-50vw + 50px);
     }
 
     .banner-slider-container {

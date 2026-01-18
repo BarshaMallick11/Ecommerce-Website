@@ -1,11 +1,14 @@
 // frontend/src/components/ProductList.js
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Row, Col, Spin, Typography } from 'antd';
+import { Row, Col, Spin, Typography, Button, FloatButton, message } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import Product from './Product';
 import { useParams, useNavigate } from 'react-router-dom';
 import BackButton from './BackButton';
 import { useProductSearch } from '../hooks/useProductSearch';
+import { useAuth } from '../context/AuthContext';
+import ProductEditModal from './ProductEditModal';
 
 const { Title } = Typography;
 
@@ -15,9 +18,11 @@ const ProductList = () => {
     const [searchInput, setSearchInput] = useState('');
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [categoryDetails, setCategoryDetails] = useState(null);
+    const [isModalVisible, setIsModalVisible] = useState(false);
     const { keyword, categorySlug } = useParams();
     const navigate = useNavigate();
     const { suggestions, fetchSuggestions, clearSuggestions } = useProductSearch();
+    const { user, token } = useAuth();
     const searchRef = useRef(null);
 
     // Close suggestions when clicking outside
@@ -93,6 +98,83 @@ const ProductList = () => {
         };
         fetchCategoryAndProducts();
     }, [keyword, categorySlug]);
+
+    // Function to refetch products after adding new product
+    const refetchProducts = async () => {
+        setLoading(true);
+        try {
+            let url = '/products';
+            const params = [];
+
+            if (keyword) params.push(`keyword=${keyword}`);
+            if (categorySlug) params.push(`category=${categorySlug}`);
+
+            if (params.length > 0) {
+                url += `?${params.join('&')}`;
+            }
+
+            const { data } = await axios.get(`${process.env.REACT_APP_API_URL}${url}`);
+            setProducts(data);
+        } catch (error) {
+            console.error("Failed to refetch products:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Handle product modal submission
+    const handleModalFinish = async (values) => {
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        };
+
+        try {
+            const formData = new FormData();
+            formData.append('name', values.name);
+            formData.append('description', values.description);
+            formData.append('price', values.price);
+            formData.append('quantity', values.quantity || 0);
+            formData.append('stock', values.stock || 0);
+            formData.append('unit', values.unit || 'Kg');
+            formData.append('discount', values.discount || 0);
+
+            // Unit variants for multiple sizes/prices
+            formData.append('hasVariants', values.hasVariants || false);
+            if (values.hasVariants && values.unitVariants && values.unitVariants.length > 0) {
+                formData.append('unitVariants', JSON.stringify(values.unitVariants));
+            }
+
+            // Use category from modal or pre-selected category
+            if (values.category) {
+                formData.append('category', values.category);
+            }
+
+            if (values.mainImageFile) {
+                formData.append('image', values.mainImageFile);
+            }
+
+            if (values.additionalImageFiles && values.additionalImageFiles.length > 0) {
+                values.additionalImageFiles.forEach((file) => {
+                    formData.append('additionalImages', file);
+                });
+            }
+
+            if (!values.mainImageFile) {
+                message.error('Please upload a main product image');
+                return;
+            }
+
+            await axios.post(`${process.env.REACT_APP_API_URL}/products`, formData, config);
+            message.success(`Product added successfully to ${categoryDetails?.name || 'category'}!`);
+            setIsModalVisible(false);
+            refetchProducts();
+        } catch (error) {
+            console.error('Error saving product:', error);
+            message.error(error.response?.data?.message || 'Failed to save product');
+        }
+    };
 
     if (loading) {
         return <div style={{ textAlign: 'center', marginTop: '50px' }}><Spin size="large" /></div>;
@@ -173,6 +255,32 @@ const ProductList = () => {
                     )}
                 </Row>
             </div>
+
+            {/* Admin Floating Action Button - Add Product to Category */}
+            {user?.isAdmin && categorySlug && categoryDetails && (
+                <>
+                    <FloatButton
+                        icon={<PlusOutlined />}
+                        type="primary"
+                        style={{
+                            right: 24,
+                            bottom: 24,
+                            width: 60,
+                            height: 60
+                        }}
+                        tooltip={<div>Add Product to {categoryDetails.name}</div>}
+                        onClick={() => setIsModalVisible(true)}
+                    />
+                    
+                    <ProductEditModal
+                        visible={isModalVisible}
+                        onCancel={() => setIsModalVisible(false)}
+                        onFinish={handleModalFinish}
+                        initialValues={{ category: categoryDetails._id }}
+                    />
+                </>
+            )}
+
         </div>
     );
 };

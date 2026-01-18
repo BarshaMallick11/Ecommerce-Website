@@ -93,6 +93,7 @@ const CheckoutPage = () => {
                         ...response,
                         cartItems,
                         totalAmount: total,
+                        deliveryCharge: deliveryCharge,
                         token,
                         shippingAddress: JSON.parse(localStorage.getItem('shippingAddress')),
                     };
@@ -118,6 +119,7 @@ const CheckoutPage = () => {
             const orderData = {
                 cartItems,
                 totalAmount: total,
+                deliveryCharge: deliveryCharge,
                 shippingAddress: JSON.parse(localStorage.getItem('shippingAddress')),
             };
             await axios.post(`${process.env.REACT_APP_API_URL}/api/payment/cod-order`, orderData, config);
@@ -136,6 +138,7 @@ const CheckoutPage = () => {
             const orderData = {
                 cartItems,
                 totalAmount: total,
+                deliveryCharge: deliveryCharge,
                 shippingAddress: JSON.parse(localStorage.getItem('shippingAddress')),
             };
             const { data } = await axios.post(

@@ -26,6 +26,7 @@ import TrackOrderPage from './components/TrackOrderPage';
 import HelpPage from './components/HelpPage';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SettingsProvider } from './context/SettingsContext';
 import AdminQueryList from './components/AdminQueryList';
 import AdminSettings from './components/AdminSettings';
 import ForgotPasswordPage from './components/ForgotPasswordPage';
@@ -141,8 +142,9 @@ function App() {
   return (
     <ConfigProvider theme={theme}>
       <AuthProvider>
-        <CartProvider>
-          <Router>
+        <SettingsProvider>
+          <CartProvider>
+            <Router>
             <Layout className="layout" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
               <AppHeader />
               <Content className="site-content" style={{ padding: '0 50px', background: '#f4f1de', flex: 1 }}>
@@ -198,8 +200,9 @@ function App() {
                 Premium.Store©2025 | All Rights Reserved.
               </Footer>
             </Layout>
-          </Router>
-        </CartProvider>
+            </Router>
+          </CartProvider>
+        </SettingsProvider>
       </AuthProvider>
     </ConfigProvider>
   );

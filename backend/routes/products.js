@@ -142,7 +142,7 @@ router.post('/', protect, admin, upload.fields([
         console.log('Unit received:', req.body.unit);
         console.log('Category received:', req.body.category);
 
-        const { name, price, description, quantity, stock, discount, unit, category } = req.body;
+        const { name, price, description, quantity, stock, discount, unit, category, hasVariants, unitVariants } = req.body;
 
         // Check if main image file was uploaded
         if (!req.files || !req.files.image) {
@@ -151,14 +151,22 @@ router.post('/', protect, admin, upload.fields([
         }
 
         console.log('Uploading main image to Cloudinary...');
+        // Helper to upload buffer to Cloudinary
+        const uploadBuffer = (buffer, mimetype, options) => {
+          return new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            });
+            stream.end(buffer);
+          });
+        };
+
         // Upload main image to Cloudinary
-        const mainImageResult = await cloudinary.uploader.upload(
-            `data:${req.files.image[0].mimetype};base64,${req.files.image[0].buffer.toString("base64")}`,
-            {
-                folder: 'ecommerce-products',
-                resource_type: 'auto'
-            }
-        );
+        const mainImageResult = await uploadBuffer(req.files.image[0].buffer, req.files.image[0].mimetype, {
+            folder: 'ecommerce-products',
+            resource_type: 'auto'
+        });
         console.log('Main image uploaded:', mainImageResult.secure_url);
 
         // Upload additional images if present
@@ -166,13 +174,10 @@ router.post('/', protect, admin, upload.fields([
         if (req.files.additionalImages && req.files.additionalImages.length > 0) {
             console.log(`Uploading ${req.files.additionalImages.length} additional images...`);
             for (const file of req.files.additionalImages) {
-                const result = await cloudinary.uploader.upload(
-                    `data:${file.mimetype};base64,${file.buffer.toString("base64")}`,
-                    {
-                        folder: 'ecommerce-products',
-                        resource_type: 'auto'
-                    }
-                );
+                const result = await uploadBuffer(file.buffer, file.mimetype, {
+                    folder: 'ecommerce-products',
+                    resource_type: 'auto'
+                });
                 additionalImageUrls.push(result.secure_url);
                 console.log('Additional image uploaded:', result.secure_url);
             }
@@ -180,6 +185,16 @@ router.post('/', protect, admin, upload.fields([
 
         // Create product with Cloudinary image URLs
         // Convert quantity and discount to numbers (they come as strings from FormData)
+        // Parse unit variants if present
+        let parsedUnitVariants = [];
+        if (hasVariants === 'true' && unitVariants) {
+            try {
+                parsedUnitVariants = JSON.parse(unitVariants);
+            } catch (e) {
+                console.error('Error parsing unitVariants:', e);
+            }
+        }
+
         const product = new Product({
             name,
             price: Number(price),
@@ -190,7 +205,12 @@ router.post('/', protect, admin, upload.fields([
             unit: unit || 'Kg',
             discount: Number(discount) || 0,
             image: mainImageResult.secure_url,
-            images: additionalImageUrls
+            images: additionalImageUrls,
+            hasVariants: hasVariants === 'true',
+            unitVariants: parsedUnitVariants,
+            rating: 0,
+            numReviews: 0,
+            reviews: []
         });
 
         const createdProduct = await product.save();
@@ -211,7 +231,7 @@ router.put('/:id', protect, admin, upload.fields([
     { name: 'additionalImages', maxCount: 5 }
 ]), async (req, res) => {
     try {
-        const { name, price, description, quantity, stock, discount, unit, category, existingImages } = req.body;
+        const { name, price, description, quantity, stock, discount, unit, category, existingImages, hasVariants, unitVariants } = req.body;
         const product = await Product.findById(req.params.id);
 
         if (product) {
@@ -224,15 +244,35 @@ router.put('/:id', protect, admin, upload.fields([
             product.unit = unit || product.unit;
             product.discount = discount !== undefined ? Number(discount) : product.discount;
 
+            // Handle unit variants
+            product.hasVariants = hasVariants === 'true' || hasVariants === true;
+            if (product.hasVariants && unitVariants) {
+                try {
+                    product.unitVariants = typeof unitVariants === 'string' ? JSON.parse(unitVariants) : unitVariants;
+                } catch (e) {
+                    console.error('Error parsing unitVariants:', e);
+                }
+            } else {
+                product.unitVariants = [];
+            }
+
+            // Helper to upload buffer to Cloudinary (defined in POST, reuse if possible or redefine)
+            const uploadBuffer = (buffer, mimetype, options) => {
+              return new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
+                  if (error) reject(error);
+                  else resolve(result);
+                });
+                stream.end(buffer);
+              });
+            };
+
             // If a new main image was uploaded, update it
             if (req.files && req.files.image) {
-                const result = await cloudinary.uploader.upload(
-                    `data:${req.files.image[0].mimetype};base64,${req.files.image[0].buffer.toString("base64")}`,
-                    {
-                        folder: 'ecommerce-products',
-                        resource_type: 'auto'
-                    }
-                );
+                const result = await uploadBuffer(req.files.image[0].buffer, req.files.image[0].mimetype, {
+                    folder: 'ecommerce-products',
+                    resource_type: 'auto'
+                });
                 product.image = result.secure_url;
                 console.log('Main image updated:', result.secure_url);
             }
@@ -257,13 +297,10 @@ router.put('/:id', protect, admin, upload.fields([
                         break;
                     }
 
-                    const result = await cloudinary.uploader.upload(
-                        `data:${file.mimetype};base64,${file.buffer.toString("base64")}`,
-                        {
-                            folder: 'ecommerce-products',
-                            resource_type: 'auto'
-                        }
-                    );
+                    const result = await uploadBuffer(file.buffer, file.mimetype, {
+                        folder: 'ecommerce-products',
+                        resource_type: 'auto'
+                    });
                     updatedAdditionalImages.push(result.secure_url);
                     console.log('Additional image uploaded:', result.secure_url);
                 }

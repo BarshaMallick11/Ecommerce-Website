@@ -38,7 +38,7 @@ router.post('/create-order', async (req, res) => {
 });
 
 router.post('/verify-payment', async (req, res) => {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, cartItems, totalAmount, token, shippingAddress } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, cartItems, totalAmount, deliveryCharge, token, shippingAddress } = req.body;
     const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
     shasum.update(`${razorpay_order_id}|${razorpay_payment_id}`);
     const digest = shasum.digest('hex');
@@ -82,6 +82,7 @@ router.post('/verify-payment', async (req, res) => {
                 user: userId,
                 products: cartItems.map(item => ({ product: item, quantity: item.quantity })),
                 totalAmount: totalAmount,
+                deliveryCharge: deliveryCharge || 0,
                 paymentId: razorpay_payment_id,
                 shippingAddress: shippingAddress,
                 paymentMethod: 'Razorpay'
@@ -102,7 +103,7 @@ router.post('/verify-payment', async (req, res) => {
 // @route  POST /api/payment/cod-order
 // @access Private
 router.post('/cod-order', protect, async (req, res) => {
-    const { cartItems, totalAmount, shippingAddress } = req.body;
+    const { cartItems, totalAmount, deliveryCharge, shippingAddress } = req.body;
 
     try {
         const Product = require('../models/product.model');
@@ -138,6 +139,7 @@ router.post('/cod-order', protect, async (req, res) => {
             user: req.user._id,
             products: cartItems.map(item => ({ product: item, quantity: item.quantity })),
             totalAmount: totalAmount,
+            deliveryCharge: deliveryCharge || 0,
             paymentMethod: 'COD',
             shippingAddress: shippingAddress,
             paymentId: `COD-${Date.now()}`,
@@ -155,7 +157,7 @@ router.post('/cod-order', protect, async (req, res) => {
 // @route  POST /api/payment/upi-order
 // @access Private
 router.post('/upi-order', protect, async (req, res) => {
-    const { cartItems, totalAmount, shippingAddress } = req.body;
+    const { cartItems, totalAmount, deliveryCharge, shippingAddress } = req.body;
 
     try {
         const Product = require('../models/product.model');
@@ -191,6 +193,7 @@ router.post('/upi-order', protect, async (req, res) => {
             user: req.user._id,
             products: cartItems.map(item => ({ product: item, quantity: item.quantity })),
             totalAmount: totalAmount,
+            deliveryCharge: deliveryCharge || 0,
             paymentMethod: 'UPI',
             shippingAddress: shippingAddress,
             paymentId: `UPI-PENDING-${Date.now()}`,

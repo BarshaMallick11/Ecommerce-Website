@@ -67,6 +67,12 @@ const AdminDashboard = () => {
                 formData.append('category', values.category);
             }
 
+            // Add unit variants
+            formData.append('hasVariants', values.hasVariants || false);
+            if (values.hasVariants && values.unitVariants && values.unitVariants.length > 0) {
+                formData.append('unitVariants', JSON.stringify(values.unitVariants));
+            }
+
             // Add main image file if present
             if (values.mainImageFile) {
                 formData.append('image', values.mainImageFile);

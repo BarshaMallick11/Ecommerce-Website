@@ -15,6 +15,10 @@ const settingSchema = new Schema({
     deliveryCharge: { type: Number, default: 40 },           // Default delivery charge in Rs
     freeDeliveryThreshold: { type: Number, default: 399 },   // Free delivery above this amount
     deliveryChargeEnabled: { type: Boolean, default: true },  // Enable/disable delivery charges
+
+    // Order Limit Settings
+    maxQuantityPerProduct: { type: Number, default: 5, min: 1, max: 100 },  // Max units per product per order
+    orderLimitEnabled: { type: Boolean, default: true },      // Enable/disable order limits
 });
 
 const Setting = mongoose.model('Setting', settingSchema);

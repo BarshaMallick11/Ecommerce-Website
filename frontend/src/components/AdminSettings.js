@@ -1,7 +1,7 @@
 // frontend/src/components/AdminSettings.js
 import React, { useEffect, useState } from 'react';
 import { Form, Input, InputNumber, Button, Card, Typography, message, Spin, Divider, Switch, Upload, Image } from 'antd';
-import { PlusOutlined, CarOutlined } from '@ant-design/icons';
+import { PlusOutlined, CarOutlined, ShoppingOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import AdminNav from './AdminNav';
@@ -29,7 +29,10 @@ const AdminSettings = () => {
                     // Delivery Charge Settings
                     deliveryCharge: data.deliveryCharge || 40,
                     freeDeliveryThreshold: data.freeDeliveryThreshold || 399,
-                    deliveryChargeEnabled: data.deliveryChargeEnabled !== false
+                    deliveryChargeEnabled: data.deliveryChargeEnabled !== false,
+                    // Order Limit Settings
+                    maxQuantityPerProduct: data.maxQuantityPerProduct || 5,
+                    orderLimitEnabled: data.orderLimitEnabled !== false
                 });
                 // Set QR code preview if exists
                 if (data.upiQrCodeUrl) {
@@ -278,6 +281,55 @@ const AdminSettings = () => {
                                 <strong>Current Rule:</strong> Orders above ₹{form.getFieldValue('freeDeliveryThreshold') || 399} get
                                 <Text strong style={{ color: '#52c41a' }}> FREE Delivery</Text>.
                                 Others pay ₹{form.getFieldValue('deliveryCharge') || 40} delivery charge.
+                            </Text>
+                        </div>
+                    </Card>
+
+                    {/* Order Limit Settings */}
+                    <Card style={{ marginBottom: 24 }}>
+                        <Title level={5}>
+                            <ShoppingOutlined style={{ marginRight: 8 }} />
+                            Order Quantity Limits
+                        </Title>
+                        <Paragraph type="secondary">
+                            Control how many units of each product a customer can order. This helps prevent bulk buying and ensures fair distribution.
+                        </Paragraph>
+
+                        <Form.Item
+                            name="orderLimitEnabled"
+                            label="Enable Order Limits"
+                            valuePropName="checked"
+                        >
+                            <Switch />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="maxQuantityPerProduct"
+                            label="Maximum Quantity Per Product"
+                            rules={[{ required: true, message: 'Please enter maximum quantity' }]}
+                            extra="Maximum number of units a customer can order per product"
+                        >
+                            <InputNumber
+                                min={1}
+                                max={100}
+                                size="large"
+                                style={{ width: '100%' }}
+                                placeholder="5"
+                            />
+                        </Form.Item>
+
+                        <div style={{
+                            background: '#fff7e6',
+                            padding: '12px',
+                            borderRadius: '8px',
+                            border: '1px solid #ffd591'
+                        }}>
+                            <Text>
+                                <strong>Current Limit:</strong> Customers can order a maximum of{' '}
+                                <Text strong style={{ color: '#fa8c16' }}>
+                                    {form.getFieldValue('maxQuantityPerProduct') || 5} units
+                                </Text>{' '}
+                                per product.
                             </Text>
                         </div>
                     </Card>

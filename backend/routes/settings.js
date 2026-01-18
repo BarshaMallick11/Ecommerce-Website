@@ -83,6 +83,14 @@ router.put('/', protect, admin, async (req, res) => {
             settings.deliveryChargeEnabled = req.body.deliveryChargeEnabled;
         }
 
+        // Order Limit Settings
+        if (req.body.maxQuantityPerProduct !== undefined) {
+            settings.maxQuantityPerProduct = req.body.maxQuantityPerProduct;
+        }
+        if (req.body.orderLimitEnabled !== undefined) {
+            settings.orderLimitEnabled = req.body.orderLimitEnabled;
+        }
+
         const updatedSettings = await settings.save();
         res.json(updatedSettings);
     } catch (error) {

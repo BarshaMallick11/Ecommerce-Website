@@ -29,4 +29,18 @@ router.put('/:id/resolve', protect, admin, async (req, res) => {
     }
 });
 
+// Delete query (admin)
+router.delete('/:id', protect, admin, async (req, res) => {
+    try {
+        const query = await Query.findByIdAndDelete(req.params.id);
+        if (query) {
+            res.json({ message: 'Query deleted successfully' });
+        } else {
+            res.status(404).json({ message: 'Query not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
 module.exports = router;

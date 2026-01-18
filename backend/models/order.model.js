@@ -9,6 +9,7 @@ const orderSchema = new Schema({
         quantity: { type: Number, required: true }
     }],
     totalAmount: { type: Number, required: true },
+    deliveryCharge: { type: Number, default: 0 },
     paymentId: { type: String },
     paymentMethod: { type: String, required: true, enum: ['Razorpay', 'COD', 'UPI'], default: 'Razorpay' },
     shippingAddress: {

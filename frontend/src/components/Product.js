@@ -6,24 +6,55 @@ import { MinusOutlined, PlusOutlined, EditOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 
 const { Text } = Typography;
 
 const Product = ({ product }) => {
     const { cartItems, addToCart, decreaseQuantity: decreaseCartQuantity } = useCart();
     const { user } = useAuth();
+    const { settings } = useSettings();
     const navigate = useNavigate();
+
+    // Check if product has variants
+    const hasVariants = product.hasVariants && product.unitVariants && product.unitVariants.length > 0;
+
+    // Get default variant or first variant if has variants
+    const defaultVariant = hasVariants
+        ? (product.unitVariants.find(v => v.isDefault) || product.unitVariants[0])
+        : null;
+
+    // Get display price (use default variant price if available)
+    const displayPrice = hasVariants && defaultVariant ? defaultVariant.price : product.price;
+
+    // Get starting price (lowest price among variants)
+    const startingPrice = hasVariants
+        ? Math.min(...product.unitVariants.map(v => v.price))
+        : product.price;
 
     // Find if this product is in the cart
     const cartItem = cartItems.find(item => item._id === product._id);
     const currentQuantity = cartItem ? cartItem.quantity : 0;
 
-    // Stock management
-    const availableStock = product.stock || 0;
-    const isOutOfStock = availableStock === 0;
-    const canAddMore = currentQuantity < availableStock;
+    // Stock management - use default variant stock if has variants
+    const availableStock = hasVariants && defaultVariant ? (defaultVariant.stock || 0) : (product.stock || 0);
+    const isOutOfStock = hasVariants
+        ? product.unitVariants.every(v => (v.stock || 0) === 0)
+        : availableStock === 0;
+
+    // Order limit management
+    const maxOrderLimit = settings.orderLimitEnabled ? settings.maxQuantityPerProduct : Infinity;
+    const effectiveMax = Math.min(availableStock, maxOrderLimit);
+    const canAddMore = currentQuantity < effectiveMax;
+    const isAtOrderLimit = settings.orderLimitEnabled && currentQuantity >= maxOrderLimit;
 
     const handlePlusClick = () => {
+        // If product has variants, redirect to product page for selection
+        if (hasVariants) {
+            navigate(`/product/${product._id}`);
+            return;
+        }
+
         if (!user) {
             message.warning('Please log in to add items to your cart.');
             navigate('/login');
@@ -36,7 +67,11 @@ const Product = ({ product }) => {
         }
 
         if (!canAddMore) {
-            message.warning(`Only ${availableStock} units available. You already have ${currentQuantity} in cart.`);
+            if (isAtOrderLimit) {
+                message.warning(`Maximum ${maxOrderLimit} units allowed per product.`);
+            } else {
+                message.warning(`Only ${availableStock} units available. You already have ${currentQuantity} in cart.`);
+            }
             return;
         }
 
@@ -45,7 +80,11 @@ const Product = ({ product }) => {
 
     const increaseQuantity = () => {
         if (!canAddMore) {
-            message.warning(`Limited stock! Only ${availableStock} units available.`);
+            if (isAtOrderLimit) {
+                message.warning(`Maximum ${maxOrderLimit} units allowed per product.`);
+            } else {
+                message.warning(`Limited stock! Only ${availableStock} units available.`);
+            }
             return;
         }
         addToCart(product);
@@ -99,8 +138,21 @@ const Product = ({ product }) => {
                             </Text>
                         </Link>
 
-                        {/* Desktop-only: Quantity Badge (inline with name) */}
-                        {product.quantity > 0 && (
+                        {/* Desktop-only: Quantity Badge OR Variant Options Badge */}
+                        {hasVariants ? (
+                            <span className="quantity-badge-desktop" style={{
+                                backgroundColor: '#e6f7ff',
+                                color: '#1890ff',
+                                padding: '2px 8px',
+                                borderRadius: '10px',
+                                fontSize: '11px',
+                                fontWeight: '600',
+                                border: '1px solid #91d5ff',
+                                whiteSpace: 'nowrap'
+                            }}>
+                                {product.unitVariants.length} options
+                            </span>
+                        ) : product.quantity > 0 && (
                             <span className="quantity-badge-desktop" style={{
                                 backgroundColor: '#d4f4dd',
                                 color: '#16a34a',
@@ -126,9 +178,17 @@ const Product = ({ product }) => {
                         </Text>
                     </div>
 
-                    {/* Mobile-only: Badges (Quantity + Discount) */}
+                    {/* Mobile-only: Badges (Quantity/Variants + Discount) */}
                     <div className="product-badges-mobile">
-                        {product.quantity > 0 && (
+                        {hasVariants ? (
+                            <span className="quantity-badge-mobile" style={{
+                                backgroundColor: '#e6f7ff',
+                                color: '#1890ff',
+                                border: '1px solid #91d5ff'
+                            }}>
+                                {product.unitVariants.length} options
+                            </span>
+                        ) : product.quantity > 0 && (
                             <span className="quantity-badge-mobile">
                                 {product.quantity} {product.unit || 'Kg'}
                             </span>
@@ -310,7 +370,11 @@ const Product = ({ product }) => {
                                 whiteSpace: 'nowrap'
                             }}
                         >
-                            ₹{(product.price * (1 - (product.discount || 0) / 100)).toFixed(0)}
+                            {hasVariants ? (
+                                <>₹{(startingPrice * (1 - (product.discount || 0) / 100)).toFixed(0)}</>
+                            ) : (
+                                <>₹{(product.price * (1 - (product.discount || 0) / 100)).toFixed(0)}</>
+                            )}
                         </Text>
                         {/* Mobile-only: Original price with strikethrough */}
                         {product.discount > 0 && (
@@ -323,7 +387,19 @@ const Product = ({ product }) => {
                                     marginLeft: '8px'
                                 }}
                             >
-                                ₹{product.price.toFixed(0)}
+                                ₹{(hasVariants ? startingPrice : product.price).toFixed(0)}
+                            </Text>
+                        )}
+                        {/* Show "onwards" for products with variants */}
+                        {hasVariants && (
+                            <Text
+                                type="secondary"
+                                style={{
+                                    fontSize: '11px',
+                                    marginLeft: '4px'
+                                }}
+                            >
+                                onwards
                             </Text>
                         )}
                     </div>

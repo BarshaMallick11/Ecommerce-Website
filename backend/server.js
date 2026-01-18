@@ -56,6 +56,20 @@ app.use('/api/upi-payment', upiPaymentRouter);
 app.use('/api/banners', bannersRouter);
 console.log('Banners route registered at /api/banners');
 
+// Serve static files from React app in production
+if (process.env.NODE_ENV === 'production') {
+  const path = require('path');
+
+  // Serve static files from the React app
+  app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+  // Handle React routing - return all requests to React app
+  // This MUST be after all API routes
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+  });
+}
+
 app.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
 });
