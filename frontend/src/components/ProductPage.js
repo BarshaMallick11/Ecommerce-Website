@@ -444,7 +444,7 @@ const ProductPage = () => {
                             </div>
 
                             {/* Description */}
-                            <Paragraph style={{ marginTop: '16px', color: '#666', lineHeight: '1.8' }}>
+                            <Paragraph style={{ marginTop: '16px', color: '#666', lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>
                                 {product.description || 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'}
                             </Paragraph>
 

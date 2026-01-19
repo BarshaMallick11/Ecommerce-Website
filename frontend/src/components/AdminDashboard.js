@@ -1,6 +1,7 @@
 // frontend/src/components/AdminDashboard.js
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Space, Typography, message, Popconfirm } from 'antd';
+import { Table, Button, Space, Typography, message, Popconfirm, Input } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import ProductEditModal from './ProductEditModal';
@@ -13,13 +14,18 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
     const { token } = useAuth();
 
     const fetchProducts = async () => {
         setLoading(true);
         try {
             const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/products`);
-            setProducts(data);
+            // Sort products alphabetically by name (A to Z)
+            const sortedProducts = data.sort((a, b) =>
+                a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+            );
+            setProducts(sortedProducts);
         } catch (error) {
             message.error('Failed to fetch products');
         } finally {
@@ -148,6 +154,11 @@ const AdminDashboard = () => {
         },
     ];
 
+    // Filter products based on search query
+    const filteredProducts = products.filter(product =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <div>
             <Title level={2}>Admin Dashboard</Title>
@@ -161,12 +172,28 @@ const AdminDashboard = () => {
                     </Button>
                 </div>
 
+                {/* Search Bar */}
+                <Input
+                    placeholder="Search products by name..."
+                    prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    allowClear
+                    size="large"
+                    style={{ marginBottom: '16px', maxWidth: '400px' }}
+                />
+
                 <Table
                     columns={columns}
-                    dataSource={products}
+                    dataSource={filteredProducts}
                     rowKey="_id"
                     loading={loading}
                     scroll={{ x: true }}
+                    pagination={{
+                        pageSize: 10,
+                        showSizeChanger: true,
+                        showTotal: (total) => `Total ${total} products`,
+                    }}
                 />
 
                 <ProductEditModal

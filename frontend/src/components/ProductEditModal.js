@@ -144,6 +144,7 @@ const ProductEditModal = ({ visible, onCancel, onFinish, initialValues }) => {
             unit: 'gm',
             price: 0,
             stock: 0,
+            discount: 0,
             isDefault: unitVariants.length === 0 // First variant is default
         }]);
     };
@@ -363,12 +364,14 @@ const ProductEditModal = ({ visible, onCancel, onFinish, initialValues }) => {
                                     const currentPrice = form.getFieldValue('price') || 0;
                                     const currentStock = form.getFieldValue('stock') || 0;
                                     const currentQty = form.getFieldValue('quantity') || 1;
+                                    const currentDiscount = form.getFieldValue('discount') || 0;
                                     setUnitVariants([{
                                         label: `${currentQty}${currentUnit}`,
                                         value: currentQty,
                                         unit: currentUnit,
                                         price: currentPrice,
                                         stock: currentStock,
+                                        discount: currentDiscount,
                                         isDefault: true
                                     }]);
                                 }
@@ -392,7 +395,7 @@ const ProductEditModal = ({ visible, onCancel, onFinish, initialValues }) => {
                                     }}
                                 >
                                     <Row gutter={[12, 12]} align="middle">
-                                        <Col xs={24} sm={6}>
+                                        <Col xs={24} sm={5}>
                                             <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 4 }}>Quantity</Text>
                                             <Space.Compact style={{ width: '100%' }}>
                                                 <InputNumber
@@ -416,7 +419,7 @@ const ProductEditModal = ({ visible, onCancel, onFinish, initialValues }) => {
                                                 </Select>
                                             </Space.Compact>
                                         </Col>
-                                        <Col xs={12} sm={5}>
+                                        <Col xs={8} sm={4}>
                                             <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 4 }}>Price (₹)</Text>
                                             <InputNumber
                                                 min={0}
@@ -427,7 +430,7 @@ const ProductEditModal = ({ visible, onCancel, onFinish, initialValues }) => {
                                                 prefix="₹"
                                             />
                                         </Col>
-                                        <Col xs={12} sm={5}>
+                                        <Col xs={8} sm={4}>
                                             <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 4 }}>Stock</Text>
                                             <InputNumber
                                                 min={0}
@@ -437,7 +440,18 @@ const ProductEditModal = ({ visible, onCancel, onFinish, initialValues }) => {
                                                 placeholder="100"
                                             />
                                         </Col>
-                                        <Col xs={16} sm={5}>
+                                        <Col xs={8} sm={4}>
+                                            <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 4 }}>Discount (%)</Text>
+                                            <InputNumber
+                                                min={0}
+                                                max={100}
+                                                value={variant.discount || 0}
+                                                onChange={(val) => updateUnitVariant(index, 'discount', val)}
+                                                style={{ width: '100%' }}
+                                                placeholder="10" suffix="%"
+                                            />
+                                        </Col>
+                                        <Col xs={12} sm={4}>
                                             <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 4 }}>Default</Text>
                                             <Switch
                                                 size="small"

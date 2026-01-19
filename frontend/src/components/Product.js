@@ -172,7 +172,7 @@ const Product = ({ product }) => {
                     <div className="product-description-mobile">
                         <Text
                             type="secondary"
-                            style={{ fontSize: '12px' }}
+                            style={{ fontSize: '12px', whiteSpace: 'pre-wrap' }}
                         >
                             {product.description}
                         </Text>
