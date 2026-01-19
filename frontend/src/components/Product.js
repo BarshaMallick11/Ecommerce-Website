@@ -42,7 +42,7 @@ const Product = ({ product }) => {
         ? product.unitVariants.every(v => (v.stock || 0) === 0)
         : availableStock === 0;
 
-    // Order limit management
+    // Order limit management - for products with variants, limit applies per variant
     const maxOrderLimit = settings.orderLimitEnabled ? settings.maxQuantityPerProduct : Infinity;
     const effectiveMax = Math.min(availableStock, maxOrderLimit);
     const canAddMore = currentQuantity < effectiveMax;

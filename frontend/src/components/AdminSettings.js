@@ -296,7 +296,8 @@ const AdminSettings = () => {
                             Order Quantity Limits
                         </Title>
                         <Paragraph type="secondary">
-                            Control how many units of each product a customer can order. This helps prevent bulk buying and ensures fair distribution.
+                            Control how many units of each product a customer can order. For products with variant options (like 50gm, 100gm, 500gm),
+                            this limit applies independently to each variant - allowing customers to order the maximum quantity of each variant size.
                         </Paragraph>
 
                         <Form.Item
@@ -309,9 +310,9 @@ const AdminSettings = () => {
 
                         <Form.Item
                             name="maxQuantityPerProduct"
-                            label="Maximum Quantity Per Product"
+                            label="Maximum Quantity Per Product / Variant"
                             rules={[{ required: true, message: 'Please enter maximum quantity' }]}
-                            extra="Maximum number of units a customer can order per product"
+                            extra="Maximum units per product (or per variant for products with multiple size options)"
                         >
                             <InputNumber
                                 min={1}
@@ -333,7 +334,7 @@ const AdminSettings = () => {
                                 <Text strong style={{ color: '#fa8c16' }}>
                                     {form.getFieldValue('maxQuantityPerProduct') || 5} units
                                 </Text>{' '}
-                                per product.
+                                per product (or per variant for products with size options like 50gm, 100gm, etc.).
                             </Text>
                         </div>
                     </Card>

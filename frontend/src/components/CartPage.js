@@ -73,7 +73,10 @@ const CartPage = () => {
                     const handleAddToCart = () => {
                         if (!canAddMore) {
                             if (isAtOrderLimit) {
-                                message.warning(`Maximum ${maxOrderLimit} units allowed per product.`);
+                                const limitText = item.selectedVariant
+                                    ? `Maximum ${maxOrderLimit} units allowed per variant.`
+                                    : `Maximum ${maxOrderLimit} units allowed per product.`;
+                                message.warning(limitText);
                             } else {
                                 message.warning(`Limited stock! Only ${availableStock} units available.`);
                             }

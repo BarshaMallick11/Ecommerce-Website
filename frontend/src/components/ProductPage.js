@@ -54,6 +54,13 @@ const ProductPage = () => {
         fetchProduct();
     }, [fetchProduct]);
 
+    // Reset quantity to 1 when variant changes
+    useEffect(() => {
+        if (selectedVariant) {
+            setQuantity(1);
+        }
+    }, [selectedVariant]);
+
     // Get current price and stock based on selected variant
     const getCurrentPrice = () => {
         if (product?.hasVariants && selectedVariant) {
@@ -94,7 +101,7 @@ const ProductPage = () => {
     const availableStock = getCurrentStock();
     const isOutOfStock = availableStock === 0;
 
-    // Order limit management
+    // Order limit management - for products with variants, limit applies per variant
     const maxOrderLimit = settings.orderLimitEnabled ? settings.maxQuantityPerProduct : Infinity;
     const effectiveMax = Math.min(availableStock, maxOrderLimit);
     const canIncreaseQuantity = (quantity + currentCartQuantity) < effectiveMax;
@@ -105,7 +112,10 @@ const ProductPage = () => {
             setQuantity(prev => prev + 1);
         } else {
             if (isAtOrderLimit) {
-                message.warning(`Maximum ${maxOrderLimit} units allowed per product.`);
+                const limitText = product?.hasVariants && selectedVariant
+                    ? `Maximum ${maxOrderLimit} units allowed per variant.`
+                    : `Maximum ${maxOrderLimit} units allowed per product.`;
+                message.warning(limitText);
             } else {
                 message.warning(`Limited stock! Only ${availableStock} units available total (${currentCartQuantity} already in cart).`);
             }
@@ -159,10 +169,11 @@ const ProductPage = () => {
         // Check order limit first
         if (settings.orderLimitEnabled && totalQuantity > maxOrderLimit) {
             const remaining = maxOrderLimit - currentCartQuantity;
+            const limitText = product?.hasVariants && selectedVariant ? 'variant' : 'product';
             if (remaining > 0) {
-                message.warning(`Maximum ${maxOrderLimit} units allowed per product. You can add ${remaining} more.`);
+                message.warning(`Maximum ${maxOrderLimit} units allowed per ${limitText}. You can add ${remaining} more.`);
             } else {
-                message.warning(`Maximum limit of ${maxOrderLimit} units reached for this product.`);
+                message.warning(`Maximum limit of ${maxOrderLimit} units reached for this ${limitText}.`);
             }
             return;
         }
@@ -457,9 +468,9 @@ const ProductPage = () => {
                                     border: '1px solid #ffd591'
                                 }}>
                                     <Text style={{ fontSize: '13px', color: '#d46b08' }}>
-                                        <strong>Order Limit:</strong> Max {settings.maxQuantityPerProduct} units per order
+                                        <strong>Order Limit:</strong> Max {settings.maxQuantityPerProduct} units per {product?.hasVariants && selectedVariant ? 'variant' : 'product'}
                                         {currentCartQuantity > 0 && (
-                                            <span> ({currentCartQuantity} already in cart)</span>
+                                            <span> ({currentCartQuantity} of this {product?.hasVariants && selectedVariant ? 'variant' : 'product'} in cart)</span>
                                         )}
                                     </Text>
                                 </div>
