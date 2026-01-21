@@ -171,6 +171,7 @@ const ShippingPage = () => {
                                         </Popconfirm>,
                                     ]}
                                 >
+                                    <p><strong>{addr.name}</strong></p>
                                     <p>
                                         {addr.address}, {addr.city}
                                         {addr.district ? `, ${addr.district}` : ''}

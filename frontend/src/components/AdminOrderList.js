@@ -23,18 +23,32 @@ const generateBill = (order) => {
     // Set font styles
     let yPosition = 20;
 
+    // Add logo image in front of header
+    try {
+        doc.addImage('/premium.store.png', 'PNG', 60, yPosition - 8, 15, 10);
+    } catch (error) {
+        console.error('Error adding logo to PDF:', error);
+    }
+
     // Header - Store Name
     doc.setFontSize(24);
     doc.setTextColor(79, 119, 45); // #4f772d
     doc.text('Premium.Store', 105, yPosition, { align: 'center' });
 
     yPosition += 8;
-    doc.setFontSize(12);
+    doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
-    doc.text('Tax Invoice / Bill of Supply', 105, yPosition, { align: 'center' });
-
+    doc.text(
+        [
+            'Kamrangaguri, Satellite Township, Siliguri,',
+            'Jalpaiguri, West Bengal, India, 734015'
+        ],
+        105,
+        yPosition,
+        { align: 'center' }
+    );
     // Line separator
-    yPosition += 5;
+    yPosition += 7;
     doc.setDrawColor(79, 119, 45);
     doc.setLineWidth(0.5);
     doc.line(20, yPosition, 190, yPosition);
@@ -49,12 +63,6 @@ const generateBill = (order) => {
     doc.text('Invoice No:', 20, yPosition);
     doc.setFont(undefined, 'normal');
     doc.text(order._id, 50, yPosition);
-
-    yPosition += 6;
-    doc.setFont(undefined, 'bold');
-    doc.text('Customer:', 20, yPosition);
-    doc.setFont(undefined, 'normal');
-    doc.text(order.user?.username || 'Guest', 50, yPosition);
 
     yPosition += 6;
     doc.setFont(undefined, 'bold');
@@ -75,6 +83,11 @@ const generateBill = (order) => {
 
     rightYPosition += 6;
     doc.setFont(undefined, 'normal');
+    doc.text(order.shippingAddress?.name || '', 120, rightYPosition, { maxWidth: 70 });
+
+
+    rightYPosition += 6;
+    doc.setFont(undefined, 'normal');
     doc.text(order.shippingAddress?.address || '', 120, rightYPosition, { maxWidth: 70 });
 
     rightYPosition += 6;
@@ -87,7 +100,7 @@ const generateBill = (order) => {
     doc.text(`Phone: ${order.shippingAddress?.phoneNo || ''}`, 120, rightYPosition);
 
     // Order Items Section
-    yPosition += 15;
+    yPosition += 28;
     doc.setFillColor(245, 245, 245);
     doc.rect(20, yPosition, 170, 8, 'F');
     doc.setFont(undefined, 'bold');
@@ -166,26 +179,6 @@ const generateBill = (order) => {
     doc.text('Grand Total:', 120, yPosition);
     doc.text(`Rs. ${order.totalAmount.toFixed(2)}`, 190, yPosition, { align: 'right' });
 
-    // Additional Info
-    doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont(undefined, 'normal');
-
-    if (order.trackingNumber) {
-        yPosition += 10;
-        doc.setFont(undefined, 'bold');
-        doc.text('Tracking Number:', 20, yPosition);
-        doc.setFont(undefined, 'normal');
-        doc.text(order.trackingNumber, 60, yPosition);
-    }
-
-    if (order.estimatedDeliveryDate) {
-        yPosition += 6;
-        doc.setFont(undefined, 'bold');
-        doc.text('Estimated Delivery:', 20, yPosition);
-        doc.setFont(undefined, 'normal');
-        doc.text(moment(order.estimatedDeliveryDate).format('DD MMM YYYY'), 60, yPosition);
-    }
 
     // Footer
     yPosition = 280;
@@ -309,7 +302,7 @@ const AdminOrderList = () => {
                                     </Space>
                                 }
                             >
-                                <p><Text strong>User:</Text> {order.user ? order.user.username : 'N/A'}</p>
+                                <p><Text strong>Name:</Text> {order.shippingAddress?.name || 'N/A'}</p>
                                 <p><Text strong>Date:</Text> {moment(order.createdAt).format('YYYY-MM-DD')}</p>
 
                                 {/* Product Items */}

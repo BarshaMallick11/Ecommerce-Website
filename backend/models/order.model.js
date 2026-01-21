@@ -13,6 +13,7 @@ const orderSchema = new Schema({
     paymentId: { type: String },
     paymentMethod: { type: String, required: true, enum: ['Razorpay', 'COD', 'UPI'], default: 'Razorpay' },
     shippingAddress: {
+        name: { type: String, required: false, default: '' },
         address: { type: String, required: true },
         city: { type: String, required: true },
         district: { type: String },

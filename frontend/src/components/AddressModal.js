@@ -33,6 +33,9 @@ const AddressModal = ({ visible, onCancel, onFinish, initialValues }) => {
             }}
         >
             <Form form={form} layout="vertical">
+                <Form.Item name="name" label="Full Name" rules={[{ required: true }]}>
+                    <Input />
+                </Form.Item>
                 <Form.Item name="address" label="Address" rules={[{ required: true }]}>
                     <Input />
                 </Form.Item>

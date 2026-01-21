@@ -36,7 +36,12 @@ router.post('/address', protect, async (req, res) => {
             res.status(404).json({ message: 'User not found' });
         }
     } catch (error) {
-        res.status(400).json({ message: 'Error adding address' });
+        console.error('Address addition error:', error);
+        if (error.name === 'ValidationError') {
+            res.status(400).json({ message: 'Validation Error', details: error.message });
+        } else {
+            res.status(400).json({ message: 'Error adding address', error: error.message });
+        }
     }
 });
 
